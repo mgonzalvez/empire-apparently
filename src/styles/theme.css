@@ -118,3 +118,276 @@ body {
 .app-footer button:hover {
   border-color: var(--accent);
 }
+
+/* ── C3: game screen ─────────────────────────────────────────── */
+
+.game-root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.empire-bar {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 1.1rem;
+  padding: 0.6rem 1.25rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.empire-year {
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.empire-resources {
+  display: flex;
+  gap: 1rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.empire-fleet {
+  margin-left: auto;
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.game-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .game-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+.game-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.game-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+  min-height: 0;
+}
+
+.map-wrap {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.5rem;
+}
+
+.star-map {
+  display: block;
+  width: 100%;
+  height: auto;
+  user-select: none;
+}
+
+.advance-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.advance-row button {
+  font: inherit;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.5rem 1.3rem;
+  cursor: pointer;
+}
+
+.advance-row button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.muted {
+  color: var(--ink-muted);
+  font-size: 0.9rem;
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.9rem 1.1rem;
+}
+
+.panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+}
+
+.star-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-left: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+.star-chip i {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+}
+
+.row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.18rem 0;
+  font-size: 0.92rem;
+  border-bottom: 1px dashed color-mix(in srgb, var(--line) 60%, transparent);
+}
+
+.row .label {
+  color: var(--ink-muted);
+}
+
+.row.warn .value {
+  color: var(--warn);
+  font-weight: 600;
+}
+
+.fleet-line {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
+.event-log {
+  flex: 1;
+  min-height: 120px;
+  max-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-log ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+}
+
+.event-log li {
+  font-size: 0.85rem;
+  padding: 0.22rem 0;
+  border-top: 1px solid var(--line);
+}
+
+.event-log li:first-child {
+  border-top: 0;
+}
+
+.log-tick {
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+  margin-right: 0.5rem;
+}
+
+li.log-warning {
+  color: var(--warn);
+}
+
+li.log-combat {
+  color: var(--danger);
+}
+
+li.log-event {
+  color: var(--accent-2);
+}
+
+li.log-advisor {
+  font-style: italic;
+}
+
+.campaign-end {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+}
+
+.campaign-end-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 2rem 2.5rem;
+  max-width: 26rem;
+  text-align: center;
+}
+
+.campaign-end-card button {
+  font: inherit;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.5rem 1.3rem;
+  cursor: pointer;
+  margin-top: 0.75rem;
+}
+
+/* Title screen (C3 start door; C17 replaces with the themed title) */
+.seed-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 1rem 0;
+  font-size: 0.9rem;
+  color: var(--ink-muted);
+  align-items: flex-start;
+}
+
+.seed-field input {
+  font: inherit;
+  padding: 0.45rem 0.7rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  width: 12rem;
+}
+
+.placeholder-card button.primary {
+  font: inherit;
+  font-weight: 600;
+  background: var(--accent);
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.55rem 1.4rem;
+  cursor: pointer;
+}

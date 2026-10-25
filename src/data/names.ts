@@ -1,3 +1,5 @@
+import type { StarClass } from '../engine/types';
+
 /**
  * Name pools (PLAN §5). All names are original (SPEC §2 — no recognizable
  * copyrighted characters or branding). Pools are larger than any single
@@ -115,3 +117,12 @@ export const FACTION_COLORS = {
   ],
   neutral: '#868e96',
 } as const;
+
+/** Star-class colors (UI tokens, not mechanics). */
+export const STAR_COLORS: Record<StarClass, string> = {
+  red: '#ff6b57',
+  yellow: '#ffd75e',
+  white: '#dfe6f3',
+  blue: '#74a4fc',
+  binary: '#b197fc',
+};

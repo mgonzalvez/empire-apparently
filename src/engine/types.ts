@@ -4,6 +4,8 @@
  * Every type here must be JSON-serializable (save format, PLAN §7).
  */
 
+import type { RngState } from './random';
+
 /** Star classification (core §3; classes are our design choice). */
 export type StarClass = 'blue' | 'yellow' | 'red' | 'binary' | 'white';
 
@@ -51,7 +53,7 @@ export interface System {
   /** "S00".."S19" — fixed canonical order (index order). */
   id: string;
   name: string;
-  /** Map units (float, 2 decimals). */
+  /** Map units (float, 2 decimals; space ≈ 100×80, see balance.ts). */
   x: number;
   y: number;
   /** Grid cell (topology for adjacency: rival expansion, fairness checks). */
@@ -96,4 +98,101 @@ export interface Galaxy {
   homeworldId: string;
   /** factionId → system id that is that faction's capital (player = homeworld). */
   capitalIds: Record<string, string>;
+}
+
+// ── Fleets (core spec §6) ─────────────────────────────────────────────
+
+export interface FleetShips {
+  interceptor: number;
+  cruiser: number;
+  transport: number;
+}
+
+/** Flagship orders (core §6 "current orders"); C4/C7/C11 wire each one. */
+export type FleetOrderType = 'hold' | 'travel' | 'attack' | 'reinforce';
+
+export interface Fleet {
+  id: string;
+  name: string;
+  /** Current location (core §6). C4 adds travel status on top. */
+  systemId: string;
+  /** Ship quantities by class (core §6). */
+  ships: FleetShips;
+  /** Hull condition 0..100 (core §6; C6 repair/refit). */
+  hull: number;
+  orders: { type: FleetOrderType; targetId: string | null };
+}
+
+// ── Log & campaign state ────────────────────────────────────────────────
+
+export type LogKind = 'info' | 'economy' | 'combat' | 'event' | 'warning' | 'advisor';
+
+export interface LogEntry {
+  tick: number;
+  kind: LogKind;
+  text: string;
+}
+
+// ── Game state (PLAN §7 save contract, v1) ─────────────────────────────
+
+export type AdvisorId = 'mort' | 'bingo' | 'handbook';
+export type HintLevel = 'off' | 'occasional' | 'normal' | 'frequent';
+export type ThemeSetting = 'light' | 'dark' | 'system';
+export type CampaignStatus = 'active' | 'victory' | 'defeat';
+export type DefeatReason = 'total' | 'deadline' | 'unrecoverable' | null;
+
+/** Rival AI state (C8: intent + expansion; C11: per-tick action budget). */
+export interface RivalState {
+  factionId: string;
+}
+
+/**
+ * The only mutable game state (PLAN §7). Everything is JSON-serializable —
+ * RNGs are stored as serializable state, never objects.
+ */
+export interface GameState {
+  v: 1;
+  seed: number;
+  /** Galactic-year tick (0 = start; core §4 "discrete galactic-year ticks"). */
+  tick: number;
+  /** Simulation RNG — every mechanical draw, in pipeline order. */
+  rng: RngState;
+  /** Narration-only RNG (dialogue variety). Never influences sim outcomes. */
+  narrRng: RngState;
+  galaxy: Galaxy;
+  /** The three global empire resources (core §5). */
+  empire: Resources;
+  /** The player's primary expeditionary fleet (core §6). */
+  flagship: Fleet;
+  /** Up to 3 autonomous support fleets (core §7; C13). */
+  supports: Fleet[];
+  rivals: RivalState[];
+  /** Deterministic narrative-event state (C29). */
+  narrative: { resolvedIds: string[]; cooldowns: Record<string, number> };
+  /** Present while the tutorial runs (C20–C23). */
+  tutorial: { step: number; completedSteps: number[]; scenario: string } | null;
+  dialogue: {
+    advisor: AdvisorId;
+    recentIds: string[];
+    shown: Record<string, Record<string, number>>;
+  };
+  settings: {
+    hints: HintLevel;
+    supernovaFreq: 'zero' | 'low' | 'normal';
+    advisor: AdvisorId;
+    sound: boolean;
+    theme: ThemeSetting;
+  };
+  stats: {
+    battles: number;
+    wins: number;
+    losses: number;
+    fleetsLost: number;
+    supernovas: number;
+    conquests: number;
+  };
+  status: CampaignStatus;
+  defeatReason: DefeatReason;
+  /** Append-only event log; newest entries last. */
+  log: LogEntry[];
 }

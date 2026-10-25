@@ -94,4 +94,17 @@ export const GALAXY = {
     thresholdCritical: 75,
     thresholdDetonation: 100,
   },
+};
+
+/** Campaign-scale rules (PLAN §4, §8). */
+export const CAMPAIGN = {
+  /** Core §3 "Starting conditions": enough to make meaningful decisions. */
+  startingResources: { credits: 100, materials: 100, fuel: 100 },
+  /** "A modest flagship fleet" (core §3): enough to strike and invade once. */
+  startingFleetShips: { interceptor: 2, cruiser: 0, transport: 1 },
+  /** Accepted defaults (PLAN §4): 120-year mandate, 60% integration victory. */
+  deadlineYears: 120,
+  victoryIntegration: 0.6,
+  /** Event log cap (oldest entries trimmed first). */
+  maxLogEntries: 400,
 } as const;
