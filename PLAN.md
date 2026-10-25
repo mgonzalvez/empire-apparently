@@ -103,7 +103,7 @@ empire_apparently/
 │   │   ├── victory.ts            # win/defeat/mandate
 │   │   └── tutorial.ts           # tutorial step machine (verify-only advance)
 │   ├── state/
-│   │   ├── store.ts              # useSyncExternalStore binding
+│   │   ├── gameStore.ts          # useSyncExternalStore binding
 │   │   └── persistence.ts        # autosave, export/import, validation, restart-seed
 │   ├── data/
 │   │   ├── balance.ts            # ALL tunables, versioned, documented
@@ -120,7 +120,7 @@ empire_apparently/
 │   │   └── tutorial/
 │   │       ├── scenario.ts       # deterministic 7-system region
 │   │       └── steps.ts          # 10 steps × content
-│   ├── components/               # GalaxyMap, SystemNode, SystemPanel, FleetPanel,
+│   ├── components/               # GalaxyMap, StarSystem, PlanetPanel, FleetPanel,
 │   │   …                         # TravelDialog, BattleReport, EventLog, EmpireBar,
 │   │                             # DialogueBar, HintBar, AdvisorPortrait, Handbook,
 │   │                             # TitleScreen, NewGameSetup, OptionsScreen,
@@ -185,7 +185,7 @@ Every elapsed year runs the full pipeline. Combat resolves on arrival (no separa
   |---|---|---|---|---|
   | Industrial | 1 | 3 | 1 | better shipyard costs |
   | Mining | 1 | 2 | 2 | +fuel |
-  | Economic | 3 | 1 | 1 | +research-free income |
+  | Economic | 3 | 1 | 1 | — |
   | Fortress | 1 | 1 | 1 | +planet defense, +fleet support |
   | Balanced | 2 | 2 | 2 | — |
   Scaled by development level 1–5 (auto-advancing, capped, transparent cost). *Initial table — tuned in C12/C34.*
@@ -195,7 +195,7 @@ Every elapsed year runs the full pipeline. Combat resolves on arrival (no separa
 - **Occupation:** auto-garrison assigned at capture (recommended, from surviving troops); stability 0–100; integration rate ∝ stability; auto top-up when stability < 40 (the Tier-0 fallback); rebellion at stability 0 with under-garrison → independent or previous faction. UI: Stable / Unstable / Rebellion Imminent + estimated integration time + garrison + Reinforce (optional).
 - **Support fleets:** max 3, built at shipyards with real ships + credits + materials. State machine: Idle/Traveling/Scouting/Patrolling/Reinforcing/Defending/Returning. Unassigned → auto-Patrol home region (Tier-0 safe). Never invade without explicit order; avoid suicidal fights; idle when infeasible; report via log.
 - **Rivals:** 1 action/tick budget: Expand (ratio ≥ 1.5, adjacent independent), Reinforce (below defense target), Attack (ratio ≥ 2.0, weak neighbor), else build. Fixed starting bonus. No cheating.
-- **Supernovas:** candidates seeded at new game: zero/low/normal = 0 / 2–3 / 3–5. Instability 0–100, rise 2–5/yr (seeded). Anomalous ≥ 50 (alert + map marker + scouting narrows window). Critical ≥ 75 (stronger warning, window shown as 3–6 years, no false precision). Detonation at 100: planet destroyed, local fleets destroyed, production lost, system = non-colonizable remnant. **Homeworld is never a candidate** (fairness). Destroyed systems excluded from victory.
+- **Supernovas:** candidates seeded at new game: zero/low/normal = 0 / 2–3 / 3–5 (**default: low**, core §10). Instability 0–100, rise 2–5/yr (seeded). Anomalous ≥ 50 (alert + map marker + scouting narrows window). Critical ≥ 75 (stronger warning, window shown as 3–6 years, no false precision). Detonation at 100: planet destroyed, local fleets destroyed, production lost, system = non-colonizable remnant. **Homeworld is never a candidate** (fairness). Destroyed systems excluded from victory.
 - **Mandate deadline:** 120 years ⚠.
 - **Victory:** all surviving inhabitable systems player-controlled AND (Integrated OR integration ≥ 60) ⚠.
 - **Defeat:** per §4 (wipe / mandate / no-recovery). Victory/defeat screens show campaign duration, systems conquered, fleets lost, battles won, supernovas survived, empire score (core §12).

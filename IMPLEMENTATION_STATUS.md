@@ -1,6 +1,6 @@
 # Implementation Status — Empire, Apparently
 
-Last updated: 2026-10-25 — **C1 complete.** Next chunk: **C2** (Seeded galaxy generation).
+Last updated: 2026-10-25 — **C2 complete.** Next chunk: **C3** (Engine core + UI shell).
 
 Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 "Done" means the chunk's acceptance criteria passed and are committed.
@@ -30,7 +30,7 @@ Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 | Chunk | Title | Phase | Status | Notes |
 |---|---|---|---|---|
 | C1 | Toolchain & app skeleton | A | ✅ | React 19 / Vite 8 / TS 7 / Vitest 5; base path verified under subpath via preview server; theme toggle persists; CI workflow in place |
-| C2 | Seeded galaxy generation | A | ⬜ | |
+| C2 | Seeded galaxy generation | A | ✅ | sfc32 Rng (serializable state); 20-system generator with fairness invariants (secure homeworld, rivals ≥ grid-2, ≥ 2 weak adjacent targets, no candidates in opening zone, default supernova freq = low); 8-system fixture galaxy; 80 tests, 100-seed invariant sweep; gen ≈ 0.3 ms avg |
 | C3 | Engine core + UI shell | B | ⬜ | |
 | C4 | Travel, fuel, range | B | ⬜ | |
 | C5 | Economy base | B | ⬜ | |

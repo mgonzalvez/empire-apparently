@@ -32,7 +32,7 @@ Standing constraints applied to every chunk (PLAN §3, §9, §10):
 
 ### C3 — Engine core + UI shell — M
 - **Deps:** C2 · **Play state:** map renders, systems selectable, wait advances a year.
-- **Scope:** `engine/simulation.ts` (GameState v1, `dispatch(action)`, fixed-order tick pipeline with stubbed systems, action ledger enforcing "only listed actions advance time"), `state/store.ts`, `components/GalaxyMap.tsx` (SVG base), `SystemNode.tsx`, `SystemPanel.tsx` (basic), `EmpireBar.tsx` (year, placeholder totals), `EventLog.tsx`, `tests/simulation.test.ts`.
+- **Scope:** `engine/simulation.ts` (GameState v1, `dispatch(action)`, fixed-order tick pipeline with stubbed systems, action ledger enforcing "only listed actions advance time"), `state/gameStore.ts`, `components/GalaxyMap.tsx` (SVG base), `StarSystem.tsx`, `PlanetPanel.tsx` (basic), `EmpireBar.tsx` (year, placeholder totals), `EventLog.tsx`, `tests/simulation.test.ts`.
 - **Accept:** pipeline order proven by tests (each system sees prior systems' results); UI navigation advances zero time; state fully serializable; map shows all 20 systems with ownership colors.
 
 ### C4 — Travel, fuel, range — M
@@ -114,7 +114,7 @@ Standing constraints applied to every chunk (PLAN §3, §9, §10):
 
 ### C17 — Title screen & new-game setup — M
 - **Deps:** C12 (every setup option must be real) · **Play state:** new themed front door.
-- **Scope:** `TitleScreen.tsx` — EMPIRE, APPARENTLY + tagline + actions **New Administrative Disaster** (New game) / **Resume Previous Mistake** (Continue, only when a save exists) / **Options**; tooltips = conventional labels (SPEC §10). `NewGameSetup.tsx` — advisor selection (3, all functional from C19; until C19 this screen ships with M.O.R.T. only and a note), seed display, supernova frequency (zero/low/normal), theme toggle. Title buttons for Tutorial and Handbook appear only in C23/C30 (no fake controls).
+- **Scope:** `TitleScreen.tsx` — EMPIRE, APPARENTLY + tagline + actions **New Administrative Disaster** (New game) / **Resume Previous Mistake** (Continue, only when a save exists) / **Options**; tooltips = conventional labels (SPEC §10). `NewGameSetup.tsx` — advisor selection (3, all functional from C19; until C19 this screen ships with M.O.R.T. only and a note), seed display, supernova frequency (zero/low/normal — default low), theme toggle. Title buttons for Tutorial and Handbook appear only in C23/C30 (no fake controls).
 - **Accept:** New game → playable in < 2 clicks; Resume restores exactly (tested); no button exists for a feature that doesn't; a first-time user knows what every label means from tooltips.
 
 ### C18 — Thematic skin pass — M
@@ -179,7 +179,7 @@ Standing constraints applied to every chunk (PLAN §3, §9, §10):
 
 ### C27 — World personality data — M
 - **Deps:** C12 · **Play state:** planets have faces and opinions.
-- **Scope:** `data/cultures.ts` (10 cultures × 8 governments compatibility matrix, curated pairs only), `data/quirks.ts` (12 quirks, **exactly one transparent mechanical effect each**; effects from PLAN §12 or settled here), `names.ts` expansion, planet generation rewritten to draw compatible culture/government/quirk triples, SystemPanel shows the **dossier** (flavor line + plain statement of the effect), `tests/cultures.test.ts`.
+- **Scope:** `data/cultures.ts` (10 cultures × 8 governments compatibility matrix, curated pairs only), `data/quirks.ts` (12 quirks, **exactly one transparent mechanical effect each**; effects from PLAN §12 or settled here), `names.ts` expansion, planet generation rewritten to draw compatible culture/government/quirk triples, PlanetPanel shows the **dossier** (flavor line + plain statement of the effect), `tests/cultures.test.ts`.
 - **Accept:** every generated planet has a compatible triple + exactly one effect (tested over 5k galaxies); no two quirks interact; dossier states the effect in plain words.
 
 ### C28 — Post-conquest quirk decisions — S
