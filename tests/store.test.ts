@@ -40,12 +40,19 @@ describe('gameStore — screen & view state', () => {
     expect(getState().selectedSystemId).toBeNull();
   });
 
-  it('NEW_GAME replaces any previous game (fresh start, fresh selection)', () => {
+  it('NEW_GAME replaces any previous game (fresh start, selection follows the homeworld)', () => {
     dispatch({ type: 'NEW_GAME', seed: 5 });
     dispatch({ type: 'SELECT_SYSTEM', systemId: 'S01' });
     dispatch({ type: 'NEW_GAME', seed: 6 });
     const s = getState();
     expect(s.game?.seed).toBe(6);
-    expect(s.selectedSystemId).toBeNull();
+    expect(s.selectedSystemId).toBe(s.game?.galaxy.homeworldId);
+  });
+
+  it('a new game opens with the homeworld selected', () => {
+    dispatch({ type: 'NEW_GAME', seed: 99 });
+    const s = getState();
+    expect(s.selectedSystemId).toBe(s.game?.galaxy.homeworldId);
+    expect(s.game?.galaxy.systems.some((x) => x.id === s.selectedSystemId)).toBe(true);
   });
 });

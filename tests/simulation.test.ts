@@ -45,11 +45,10 @@ describe('newGame — starting conditions (core §3)', () => {
     expect(zero.settings.supernovaFreq).toBe('zero');
   });
 
-  it('selects the homeworld by default (useful first look)', () => {
-    // (Selection is view state, asserted in store.test.ts — here we only
-    // check the homeworld exists for the UI to point at.)
+  it('the homeworld exists for the UI to open on', () => {
     const g = newGame(SEED);
     expect(g.galaxy.systems.find((s) => s.id === g.galaxy.homeworldId)).toBeDefined();
+    expect(g.flagship.systemId).toBe(g.galaxy.homeworldId);
   });
 });
 

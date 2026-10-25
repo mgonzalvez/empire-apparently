@@ -51,8 +51,11 @@ export function dispatch(action: StoreAction): void {
 
 function reduce(s: StoreState, action: StoreAction): StoreState {
   switch (action.type) {
-    case 'NEW_GAME':
-      return { game: newGame(action.seed, action), selectedSystemId: null };
+    case 'NEW_GAME': {
+      const game = newGame(action.seed, action);
+      // Open on the homeworld — the one place the player definitely knows.
+      return { game, selectedSystemId: game.galaxy.homeworldId };
+    }
     case 'MENU':
       return { game: null, selectedSystemId: null };
     case 'SELECT_SYSTEM':
