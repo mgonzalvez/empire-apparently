@@ -164,3 +164,22 @@ export const FLEET = {
   /** A shipyard is a PLAYER world with Fortress spec or development ≥ this. */
   shipyardMinDev: 3,
 } as const;
+
+/** Combat (C7; core §1 "fast automatic combat", PLAN §8). Initial values — tuned in C12/C34. */
+export const COMBAT = {
+  /** Documented stance multipliers (PLAN §8). */
+  stances: {
+    aggressive: { attack: 1.25, taken: 0.85, withdrawChance: 0 },
+    balanced: { attack: 1.0, taken: 1.0, withdrawChance: 0 },
+    cautious: { attack: 0.85, taken: 1.2, withdrawChance: 0.25 },
+  },
+  /** Seeded variance applied to each side's effective strength. */
+  variance: [0.9, 1.1] as const,
+  /** Ground defense: bastion fortifications + development modifier. */
+  bastionGroundBonus: 4,
+  developmentPerLevel: 1,
+  /** Hull degrades by this × the ship-loss fraction (0.5 = half). */
+  hullDamageFactor: 0.5,
+  /** On capture, this fraction of surviving troops garrisons the world (C8 refines). */
+  garrisonFraction: 0.5,
+} as const;

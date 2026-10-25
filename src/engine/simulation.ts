@@ -15,8 +15,9 @@ import { generateGalaxy } from './galaxy';
 import { resolveFleetMovement, planTravel } from './movement';
 import { applyIncome } from './economy';
 import { buildCost, canBuild, canRearm, canRepair, clampTroops, combatStrength, maxTroops, rearmCost, repairCost } from './fleets';
+import { canAttack, resolveBattle } from './combat';
 import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
-import type { GameState, ShipClass } from './types';
+import type { GameState, ShipClass, Stance } from './types';
 
 // ── New game ─────────────────────────────────────────────────────────────
 
@@ -69,6 +70,7 @@ export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
     },
     status: 'active',
     defeatReason: null,
+    lastBattle: null,
     log: [
       {
         tick: 0,
@@ -177,6 +179,7 @@ export type SimAction =
   | { type: 'WAIT'; years?: number }
   | { type: 'TRAVEL'; destinationId: string }
   | { type: 'REPAIR' } // exactly 1 year (time-advancing)
+  | { type: 'ATTACK'; targetId: string; stance: Stance } // exactly 1 year (time-advancing)
   | { type: 'BUILD'; ship: ShipClass } // instant, 0 ticks
   | { type: 'REARM' }; // instant, 0 ticks
 
@@ -190,6 +193,7 @@ export const TIME_ADVANCING_ACTIONS: ReadonlySet<SimAction['type']> = new Set([
   'WAIT',
   'TRAVEL',
   'REPAIR',
+  'ATTACK',
 ]);
 
 /** Pure dispatch: action → next state. Terminal campaigns are frozen. */
@@ -204,6 +208,8 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
         return beginTravel(state, action.destinationId);
       case 'REPAIR':
         return beginRepair(state);
+      case 'ATTACK':
+        return beginAttack(state, action.targetId, action.stance);
     }
   }
   switch (action.type) {
@@ -296,6 +302,17 @@ function rearm(state: GameState): GameState {
     text: `Troops board at ${at.name} (invasion strength ${d.flagship.troops}).`,
   });
   return d;
+}
+
+/**
+ * ATTACK (core §4: major planetary actions advance time). The battle
+ * resolves now (deterministic, sim RNG) and one year elapses — won or lost.
+ */
+function beginAttack(state: GameState, targetId: string, stance: Stance): GameState {
+  if (!canAttack(state, targetId).ok) return state;
+  const d = structuredClone(state) as GameState;
+  resolveBattle(d, targetId, stance);
+  return runYears(d, 1);
 }
 
 /** Total ships in a fleet (UI + C6 strength derivation). */

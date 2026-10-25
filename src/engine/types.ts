@@ -158,6 +158,47 @@ export interface RivalState {
   factionId: string;
 }
 
+// ── Combat (C7) ─────────────────────────────────────────────────────
+
+/** Player attack stances (PLAN §8, documented multipliers). */
+export type Stance = 'aggressive' | 'balanced' | 'cautious';
+
+export type BattleOutcome =
+  | 'captured' // orbit won, invasion landed
+  | 'held' // orbit lost
+  | 'invasion-failed' // orbit won, ground held
+  | 'withdrawn' // orbit won, cautious withdrawal roll
+  | 'no-lift'; // orbit won, no surviving transports
+
+/**
+ * The last battle, stored so the factual report modal can render it after
+ * the action resolves (and survive saves, C35). 100% factual — advisor
+ * narration is a separate system (C19) and never lives here.
+ */
+export interface BattleReport {
+  tick: number;
+  targetId: string;
+  targetName: string;
+  stance: Stance;
+  outcome: BattleOutcome;
+  /** Attacker strength after the stance multiplier (before variance). */
+  attackerStrength: number;
+  /** Defender's orbital strength at the start of the battle. */
+  defenderStrength: number;
+  /** Clamped ship-loss fraction (hull degradation input; 3 decimals). */
+  lossFraction: number;
+  shipsLost: FleetShips;
+  shipsAfter: FleetShips;
+  hullAfter: number;
+  troopsLost: number;
+  troopsAfter: number;
+  /** Defender's orbital strength after the battle. */
+  defenseAfter: number;
+  /** Ground garrison set on capture (null otherwise). */
+  garrison: number | null;
+  captured: boolean;
+}
+
 /**
  * The only mutable game state (PLAN §7). Everything is JSON-serializable —
  * RNGs are stored as serializable state, never objects.
@@ -205,6 +246,8 @@ export interface GameState {
   };
   status: CampaignStatus;
   defeatReason: DefeatReason;
+  /** Last resolved battle (report modal input; C19 adds narration beside it). */
+  lastBattle: BattleReport | null;
   /** Append-only event log; newest entries last. */
   log: LogEntry[];
 }

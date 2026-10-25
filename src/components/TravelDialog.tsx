@@ -6,6 +6,7 @@
  */
 
 import { planTravel } from '../engine/movement';
+import { estimateOutcome } from '../engine/combat';
 import type { GameState } from '../engine/types';
 
 export interface TravelDialogProps {
@@ -24,6 +25,13 @@ export function TravelDialog({
   const dest = game.galaxy.systems.find((s) => s.id === destinationId);
   if (!dest) return null;
   const q = planTravel(game, destinationId);
+  const est = estimateOutcome(game, destinationId);
+  const EST_TEXT: Record<typeof est, string> = {
+    favorable: 'favorable',
+    even: 'even',
+    unfavorable: 'unfavorable',
+    unknown: 'unknown (no intel)',
+  };
   const displayName = dest.explored ? dest.name : 'the uncharted system';
   const ownerName = q.ownerId
     ? game.galaxy.factions.find((f) => f.id === q.ownerId)?.name
@@ -65,6 +73,10 @@ export function TravelDialog({
                   ? `${q.defense} — ${ownerName ?? 'unclaimed'}`
                   : 'Unknown'}
               </span>
+            </div>
+            <div className="row">
+              <span className="label">Estimated outcome</span>
+              <span className="value">{EST_TEXT[est]}</span>
             </div>
             <p className="muted dialog-note">
               Setting course advances one year; the ship arrives on year{' '}

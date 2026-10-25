@@ -1,22 +1,29 @@
 /**
- * Main game screen (C4): empire bar, map (with in-transit flagship), system
- * panel with travel planning, event log, and the time-advancing controls.
+ * Main game screen (C7): empire bar, map, fleet panel, system panel with
+ * travel + attack controls, battle report modal, event log.
  */
 
 import { useState } from 'react';
 import { dispatch, useStore } from '../state/gameStore';
 import { totalShips } from '../engine/simulation';
 import { inTransitPosition } from '../engine/movement';
-import type { Fleet, System } from '../engine/types';
+import {
+  STANCE_LABEL,
+  STANCE_NOTE,
+  STANCES,
+  canAttack,
+} from '../engine/combat';
+import type { Fleet, GameState, Stance, System } from '../engine/types';
 import { EmpireBar } from './EmpireBar';
 import { EventLog } from './EventLog';
 import { FleetPanel } from './FleetPanel';
 import { GalaxyMap } from './GalaxyMap';
 import { PlanetPanel } from './PlanetPanel';
 import { TravelDialog } from './TravelDialog';
+import { BattleReportModal } from './BattleReport';
 
 export function GameScreen() {
-  const { game, selectedSystemId } = useStore();
+  const { game, selectedSystemId, dismissedBattleTick } = useStore();
   const [dialogTarget, setDialogTarget] = useState<string | null>(null);
   if (!game) return null;
 
@@ -50,13 +57,23 @@ export function GameScreen() {
   const selected =
     game.galaxy.systems.find((s) => s.id === selectedSystemId) ?? null;
 
-  const travelFooter =
-    game.status !== 'active' ? null : game.flagship.travel ? (
+  const fleetDockedAtSelected =
+    selected !== null && !inTransit && game.flagship.systemId === selected.id;
+  const attackGate = selected && fleetDockedAtSelected ? canAttack(game, selected.id) : null;
+
+  const actionFooter =
+    game.status !== 'active' || selected === null ? null : inTransit ? (
       <p className="muted">
         The flagship is in transit — it arrives on year{' '}
-        {game.flagship.travel.arriveTick}.
+        {game.flagship.travel!.arriveTick}.
       </p>
-    ) : selected && selected.id !== game.flagship.systemId ? (
+    ) : attackGate ? (
+      attackGate.ok ? (
+        <AttackControls game={game} targetId={selected.id} />
+      ) : (
+        <p className="muted">{attackGate.reason}</p>
+      )
+    ) : selected.id !== game.flagship.systemId ? (
       <button
         type="button"
         className="secondary"
@@ -65,6 +82,9 @@ export function GameScreen() {
         Plan expedition to {selected.explored ? selected.name : 'this system'} ▸
       </button>
     ) : null;
+
+  const showBattle =
+    game.lastBattle !== null && game.lastBattle.tick !== dismissedBattleTick;
 
   return (
     <div className="game-root">
@@ -101,7 +121,7 @@ export function GameScreen() {
             system={selected}
             ownerName={selected ? ownerName(selected) : ''}
             fleet={selected ? fleetAt(selected.id) : null}
-            footer={travelFooter}
+            footer={actionFooter}
           />
           <EventLog log={game.log} />
         </div>
@@ -116,6 +136,13 @@ export function GameScreen() {
             dispatch({ type: 'TRAVEL', destinationId: dialogTarget });
             setDialogTarget(null);
           }}
+        />
+      )}
+
+      {showBattle && game.lastBattle && (
+        <BattleReportModal
+          report={game.lastBattle}
+          onContinue={() => dispatch({ type: 'DISMISS_BATTLE' })}
         />
       )}
 
@@ -138,6 +165,36 @@ export function GameScreen() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+/** Stance picker + attack (C7). Stance defaults to Balanced each time. */
+function AttackControls({ game, targetId }: { game: GameState; targetId: string }) {
+  const [stance, setStance] = useState<Stance>('balanced');
+  return (
+    <div className="attack-controls">
+      <div className="stance-seg" role="group" aria-label="Attack stance">
+        {STANCES.map((s) => (
+          <button
+            key={s}
+            type="button"
+            className={stance === s ? 'active' : ''}
+            title={STANCE_NOTE[s]}
+            onClick={() => setStance(s)}
+          >
+            {STANCE_LABEL[s]}
+          </button>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="primary"
+        disabled={game.status !== 'active'}
+        onClick={() => dispatch({ type: 'ATTACK', targetId, stance })}
+      >
+        Attack
+      </button>
     </div>
   );
 }

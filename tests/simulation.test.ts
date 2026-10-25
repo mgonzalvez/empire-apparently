@@ -67,6 +67,7 @@ describe('state serializability (PLAN §7)', () => {
 describe('time advancement (core §4)', () => {
   it('only listed actions advance time', () => {
     expect([...TIME_ADVANCING_ACTIONS].sort()).toEqual([
+      'ATTACK',
       'REPAIR',
       'TRAVEL',
       'WAIT',

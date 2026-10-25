@@ -12,13 +12,15 @@ import {
   newGame,
   type NewGameOptions,
 } from '../engine/simulation';
-import type { GameState, ShipClass } from '../engine/types';
+import type { GameState, ShipClass, Stance } from '../engine/types';
 
 export interface StoreState {
   /** null = title screen. */
   game: GameState | null;
   /** View state only (not saved, not simulated). */
   selectedSystemId: string | null;
+  /** Tick of the last dismissed battle report (view state). */
+  dismissedBattleTick: number;
 }
 
 export type StoreAction =
@@ -28,11 +30,17 @@ export type StoreAction =
   | { type: 'WAIT'; years?: number }
   | { type: 'TRAVEL'; destinationId: string }
   | { type: 'REPAIR' }
+  | { type: 'ATTACK'; targetId: string; stance: Stance }
   | { type: 'BUILD'; ship: ShipClass }
   | { type: 'REARM' }
+  | { type: 'DISMISS_BATTLE' }
   | { type: 'LOAD'; state: GameState }; // C35: schema validation with import
 
-let current: StoreState = { game: null, selectedSystemId: null };
+let current: StoreState = {
+  game: null,
+  selectedSystemId: null,
+  dismissedBattleTick: -1,
+};
 const listeners = new Set<() => void>();
 
 export function getState(): StoreState {
@@ -58,10 +66,10 @@ function reduce(s: StoreState, action: StoreAction): StoreState {
     case 'NEW_GAME': {
       const game = newGame(action.seed, action);
       // Open on the homeworld — the one place the player definitely knows.
-      return { game, selectedSystemId: game.galaxy.homeworldId };
+      return { game, selectedSystemId: game.galaxy.homeworldId, dismissedBattleTick: -1 };
     }
     case 'MENU':
-      return { game: null, selectedSystemId: null };
+      return { game: null, selectedSystemId: null, dismissedBattleTick: -1 };
     case 'SELECT_SYSTEM':
       // View-only: game state is untouched (core §4 — UI never advances time).
       if (!s.game) return s;
@@ -73,12 +81,16 @@ function reduce(s: StoreState, action: StoreAction): StoreState {
       if (!s.game) return s;
       return { ...s, game: dispatchSim(s.game, action) };
     case 'REPAIR':
+    case 'ATTACK':
     case 'BUILD':
     case 'REARM':
       if (!s.game) return s;
       return { ...s, game: dispatchSim(s.game, action) };
+    case 'DISMISS_BATTLE':
+      if (!s.game?.lastBattle) return s;
+      return { ...s, dismissedBattleTick: s.game.lastBattle.tick };
     case 'LOAD':
-      return { game: action.state, selectedSystemId: null };
+      return { game: action.state, selectedSystemId: null, dismissedBattleTick: -1 };
   }
 }
 

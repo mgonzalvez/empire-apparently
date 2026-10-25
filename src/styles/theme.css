@@ -453,6 +453,71 @@ li.log-advisor {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
+/* Attack controls & battle report (C7) */
+.attack-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stance-seg {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.stance-seg button {
+  font: inherit;
+  font-size: 0.85rem;
+  flex: 1;
+  padding: 0.35rem 0.4rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.stance-seg button + button {
+  border-left: 1px solid var(--line);
+}
+
+.stance-seg button.active {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.attack-controls button.primary {
+  font: inherit;
+  font-weight: 700;
+  background: var(--danger);
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+}
+
+.battle-report .outcome {
+  margin: 0 0 0.6rem;
+  font-weight: 600;
+}
+
+.outcome-captured {
+  color: var(--ok);
+}
+
+.outcome-held,
+.outcome-invasion-failed {
+  color: var(--danger);
+}
+
+.outcome-withdrawn,
+.outcome-no-lift {
+  color: var(--warn);
+}
+
 .campaign-end {
   position: fixed;
   inset: 0;
