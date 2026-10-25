@@ -66,7 +66,7 @@ export function canAttack(state: GameState, targetId: string): Gate {
   if (target.ownerId === 'player') {
     return { ok: false, reason: 'That system is yours.' };
   }
-  if (target.defense <= 0 && !(target.planet && target.planet.garrison > 0)) {
+  if (!target.planet) {
     return { ok: false, reason: 'Nothing there to fight.' };
   }
   if (combatStrength(f) <= 0) {
@@ -207,6 +207,7 @@ export function resolveBattle(d: GameState, targetId: string, stance: Stance): B
         if (target.planet) {
           target.planet.garrison = garrison;
           target.planet.stability = 100;
+          target.planet.integration = 0;
         }
         fleet.troops = Math.max(0, troopsAfter - garrison);
         d.stats.wins += 1;

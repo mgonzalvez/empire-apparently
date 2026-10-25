@@ -6,7 +6,7 @@
  */
 
 import type { GameState } from '../engine/types';
-import { totalShips } from '../engine/simulation';
+import { totalShips } from '../engine/fleets';
 import { empireIncome } from '../engine/economy';
 
 export function EmpireBar({ game }: { game: GameState }) {

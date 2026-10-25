@@ -183,3 +183,25 @@ export const COMBAT = {
   /** On capture, this fraction of surviving troops garrisons the world (C8 refines). */
   garrisonFraction: 0.5,
 } as const;
+
+/** Occupation (C8; core §9, PLAN §8). Initial values — tuned in C12/C34. */
+export const OCC = {
+  /** Recommended garrison = development (C10 adds the threat nuance). */
+  garrisonPerDevelopment: 1,
+  /** Stability moves per year while occupied. */
+  stabilityRisePerYear: 10,
+  stabilityFallPerYear: 20,
+  /** Integration gains = stability/100 × this, per year (rate ∝ stability). */
+  integrationRatePerYear: 50,
+} as const;
+
+/** Rival factions v1 (C8; C11 adds the formal action budget). */
+export const RIVAL = {
+  /** Expand into a neighbor when own defense ≥ ratio × target defense. */
+  expandRatio: 1.5,
+  /** Otherwise reinforce the weakest owned system by this much per year. */
+  reinforcePerYear: 1,
+  /** Reinforce target = base + perDev × development. */
+  defenseTargetBase: 4,
+  defenseTargetPerDev: 2,
+} as const;

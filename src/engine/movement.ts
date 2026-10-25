@@ -15,7 +15,7 @@
  */
 
 import { MAX_JUMP_RANGE, MOVE, type MoveBand } from '../data/balance';
-import { totalShips } from './simulation';
+import { totalShips } from './fleets';
 import type { Fleet, GameState, System } from './types';
 
 /** Straight-line map distance (map units, 1 decimal for display stability). */

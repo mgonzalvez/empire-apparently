@@ -84,6 +84,13 @@ export function defenseForPlanet(type: PlanetType, starClass: StarClass, develop
   );
 }
 
+/** Grid-adjacent systems (Chebyshev distance 1) — topology, canonical order. */
+export function gridNeighbors(systems: System[], s: System): System[] {
+  return systems.filter(
+    (o) => o.id !== s.id && Math.max(Math.abs(o.gx - s.gx), Math.abs(o.gy - s.gy)) === 1,
+  );
+}
+
 interface Cell {
   gx: number;
   gy: number;
@@ -204,6 +211,7 @@ export function generateGalaxy(seed: number, opts: GalaxyOptions = {}): Galaxy {
       development,
       population: rng.intRange(lo, hi + 1),
       stability: 100,
+      integration: 0,
       garrison: 0,
     };
   };
@@ -388,6 +396,7 @@ function ensureViableEarlyTargets(
             development: 2,
             population: 12,
             stability: 100,
+            integration: 0,
             garrison: 0,
           };
           s.defense = defenseForPlanet('garden', s.starClass, 2);
@@ -447,12 +456,12 @@ export function createFixtureGalaxy(): Galaxy {
     specialization: Specialization,
     development: number,
     population: number,
-  ): Planet => ({ name, type, specialization, development, population, stability: 100, garrison: 0 });
+  ): Planet => ({
+    name, type, specialization, development, population,
+    stability: 100, integration: 0, garrison: 0,
+  });
 
-  return {
-    seed: 987654321,
-    homeworldId: 'S04',
-    systems: [
+  const systems = [
       sys(0, 'Quiet Harbor', 'yellow', p('Oatfield', 'garden', 'balanced', 2, 18), 'ind-0', 0, 0),
       sys(1, 'Cold Ledger', 'red', p('Cinder Flat', 'quarry', 'mining', 1, 6), null, 1, 0),
       sys(2, 'The Annex', 'blue', p('Milltown', 'market', 'economic', 3, 25), null, 2, 0),
@@ -470,7 +479,15 @@ export function createFixtureGalaxy(): Galaxy {
         1,
         { supernovaCandidate: true, instability: 55 },
       ),
-    ],
+  ];
+  // The homeworld is the player's from the start — fully integrated (newGame).
+  const home = systems.find((s) => s.id === 'S04')!;
+  home.occupation = 'integrated';
+  if (home.planet) home.planet.integration = 100;
+  return {
+    seed: 987654321,
+    homeworldId: 'S04',
+    systems,
     factions: [
       { id: 'player', name: PLAYER_FACTION_NAME, kind: 'player', color: FACTION_COLORS.player },
       { id: 'rival-0', name: RIVAL_NAMES[2], kind: 'rival', color: FACTION_COLORS.rivals[0] },

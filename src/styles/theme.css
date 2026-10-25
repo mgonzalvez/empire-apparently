@@ -549,6 +549,30 @@ li.log-advisor {
   margin-top: 0.75rem;
 }
 
+.end-screen-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 1.5rem;
+  margin: 1rem 0 0.25rem;
+  text-align: left;
+}
+
+.end-screen-stats div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px dashed var(--line);
+  padding-bottom: 0.25rem;
+}
+
+.end-screen-stats dt {
+  color: var(--muted);
+}
+
+.end-screen-stats dd {
+  font-weight: 600;
+}
+
 /* Title screen (C3 start door; C17 replaces with the themed title) */
 .seed-field {
   display: flex;

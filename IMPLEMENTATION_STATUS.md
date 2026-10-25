@@ -1,6 +1,6 @@
 # Implementation Status — Empire, Apparently
 
-Last updated: 2026-10-25 — **C7 complete.** Next chunk: **C8** (Conquest, occupation, rivals v1, win/lose — Gate M1).
+Last updated: 2026-10-25 — **C8 complete.** Next chunk: **C9** (Specializations & development).
 
 Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 "Done" means the chunk's acceptance criteria passed and are committed.
@@ -9,7 +9,7 @@ Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 
 | Gate | Meets | Status |
 |---|---|---|
-| M1 — Playable conquest loop | Core §17.M1 | ⬜ |
+| M1 — Playable conquest loop | Core §17.M1 | ✅ | C8: conquest loop end-to-end; Tier-0 cruise profile wins the 8-system fixture headless (tick 23, 6/6 battles, 0 fleets lost, 5/7 integrated ≥ 60%) |
 | M2 — Empire simulation | Core §17.M2 | ⬜ |
 | M3 — Automated support | Core §17.M3 | ⬜ |
 | M4 — Stellar catastrophes | Core §17.M4 | ⬜ |
@@ -36,7 +36,7 @@ Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 | C5 | Economy base | B | ✅ | `ECON` table (PLAN §8 values verbatim) in balance.ts; `engine/economy.ts`: production = table × development (all 25 spec×dev combos tested), `empireIncome` = table sum over owned inhabited non-destroyed systems; resources stage (core §4 step 1) applies it; EmpireBar shows totals + per-year income from the same function the engine uses (drift impossible); no-negative guarantee: spends blocked when short, production additive — 60 mixed actions stay ≥ 0; 128 tests |
 | C6 | Flagship & construction | B | ✅ | `FLEET` table (costs/weights/troops/repair/rearm) in balance.ts; `engine/fleets.ts`: derived combat (class weights × hull factor 0.5+0.5·hull/100, floored) & invasion (troops; capacity = transports × 10) strengths; shipyard rule = player world w/ Fortress spec or dev ≥ 3 (dev-3 homeworld always qualifies); BUILD/REARM instant (0 ticks, off-ledger), REPAIR exactly 1 tick (on-ledger) — ledger test pins WAIT/TRAVEL/REPAIR; troops clamp on transport loss (rearm required to refill); FleetPanel shows hull, strengths, composition + every control with cost AND resulting strength, disabled with reason when unaffordable/unavailable; 153 tests |
 | C7 | Automatic combat | B | ✅ | `COMBAT` table (stance multipliers, variance 0.9–1.1, ground defense, hull damage, garrison fraction); `engine/combat.ts`: effective-strength orbital exchange (orbit won iff A'>D'), loss fraction = D'/(A'+D') × stance.taken, deterministic class-wise ship losses (largest fractional remainder, interceptor-first ties), troops lost with their transports, hull × (1−0.5×frac), invasion only with surviving transports vs garrison+bastion+dev (lands iff I≥G), cautious 25% post-orbit withdrawal; `ATTACK` on the time ledger (exactly 1 year, won or lost); BattleReport stored on state + 100%-factual modal (result, strengths, per-class losses, casualties, hull, defense after, captured-or-held); travel dialog gains the core §6 outcome estimate (favorable/even/unfavorable/unknown); stance picker with documented multipliers in tooltips; 1,000 battles × 3 stances statistical bands + all gate tests; 176 tests |
-| C8 | Conquest, occupation, rivals v1, win/lose | B | ⬜ | Gate M1 |
+| C8 | Conquest, occupation, rivals v1, win/lose | B | ✅ | Gate M1. `OCC`+`RIVAL` tables in balance.ts; `engine/occupation.ts` (garrisoned→stability+10 & integration ∝ stability; under-garrisoned→stability−20 & no integration; stability 0→rebellion to previous owner/unclaimed; integration 100→'integrated' final; homeworld starts integrated); `engine/rivals.ts` v1 (one action/rival/year: expand into adjacent unclaimed/independent when defense ≥ 1.5× target, else reinforce weakest toward 4+2·dev; never touches player or rival worlds; all expansions logged); `engine/victory.ts` (victory = all surviving inhabited worlds owned AND ≥ 60% integrated incl. homeworld; defeat order = total wipe → no ships+no shipyard (no recovery) → deadline > 120; victory evaluated before the deadline); VictoryDefeatScreen with factual stats; PlanetPanel occupation readout (integration/garrison vs recommended/stability); defense-0 worlds are conquerable (gate now blocks only uninhabited stars); `tests/campaign-sim.ts` cruise profile (TRAVEL+ATTACK + mechanical shipyard upkeep only) wins the fixture — Tier-0 floor proven (PLAN P2); `totalShips` moved to fleets.ts; 200 tests |
 | C9 | Specializations & development | C | ⬜ | |
 | C10 | Occupation depth | C | ⬜ | |
 | C11 | Rivals v2 + rival fleets | C | ⬜ | |

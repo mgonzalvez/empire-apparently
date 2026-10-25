@@ -24,6 +24,7 @@ const planet = (spec: Specialization, dev: number): Planet => ({
   development: dev,
   population: 10,
   stability: 100,
+  integration: 0,
   garrison: 0,
 });
 

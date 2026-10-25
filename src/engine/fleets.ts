@@ -14,7 +14,12 @@
  */
 
 import { FLEET } from '../data/balance';
-import type { Fleet, GameState, ShipClass } from './types';
+import type { Fleet, FleetShips, GameState, ShipClass } from './types';
+
+/** Total ships in a fleet (UI + C6 strength derivation). */
+export function totalShips(fleet: { ships: FleetShips }): number {
+  return fleet.ships.interceptor + fleet.ships.cruiser + fleet.ships.transport;
+}
 
 /** Troops a fleet can carry (capacity follows surviving transports). */
 export function maxTroops(fleet: Fleet): number {

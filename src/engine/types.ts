@@ -43,6 +43,8 @@ export interface Planet {
   population: number;
   /** 0..100 — meaningful for player occupations; 100 = peaceful at start. */
   stability: number;
+  /** 0..100 — integration meter (C8); at 100 the world is 'integrated'. */
+  integration: number;
   /** Garrison troops (meaningful for player occupations). */
   garrison: number;
 }

@@ -5,7 +5,7 @@
 
 import { useState } from 'react';
 import { dispatch, useStore } from '../state/gameStore';
-import { totalShips } from '../engine/simulation';
+import { totalShips } from '../engine/fleets';
 import { inTransitPosition } from '../engine/movement';
 import {
   STANCE_LABEL,
@@ -21,6 +21,7 @@ import { GalaxyMap } from './GalaxyMap';
 import { PlanetPanel } from './PlanetPanel';
 import { TravelDialog } from './TravelDialog';
 import { BattleReportModal } from './BattleReport';
+import { VictoryDefeatScreen } from './VictoryDefeatScreen';
 
 export function GameScreen() {
   const { game, selectedSystemId, dismissedBattleTick } = useStore();
@@ -147,23 +148,7 @@ export function GameScreen() {
       )}
 
       {game.status !== 'active' && (
-        <div className="campaign-end">
-          <div className="campaign-end-card">
-            <h2>
-              {game.status === 'victory'
-                ? 'Mandate fulfilled.'
-                : 'Appointment rescinded.'}
-            </h2>
-            <p>
-              {game.status === 'defeat' && game.defeatReason === 'total'
-                ? 'The empire is gone. The Republic thanks you for your service.'
-                : 'The campaign has ended.'}
-            </p>
-            <button type="button" onClick={() => dispatch({ type: 'MENU' })}>
-              Return to title
-            </button>
-          </div>
-        </div>
+        <VictoryDefeatScreen game={game} onMenu={() => dispatch({ type: 'MENU' })} />
       )}
     </div>
   );

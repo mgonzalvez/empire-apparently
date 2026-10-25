@@ -16,6 +16,9 @@ import { resolveFleetMovement, planTravel } from './movement';
 import { applyIncome } from './economy';
 import { buildCost, canBuild, canRearm, canRepair, clampTroops, combatStrength, maxTroops, rearmCost, repairCost } from './fleets';
 import { canAttack, resolveBattle } from './combat';
+import { applyOccupation } from './occupation';
+import { applyRivals } from './rivals';
+import { evaluateWinLose } from './victory';
 import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
 import type { GameState, ShipClass, Stance } from './types';
 
@@ -28,6 +31,10 @@ export interface NewGameOptions {
 export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
   const frequency = opts.supernovaFrequency ?? GALAXY.supernova.defaultFrequency;
   const galaxy = generateGalaxy(seed, { supernovaFrequency: frequency });
+  // The homeworld is the player's from the start — fully integrated.
+  const homeworld = galaxy.systems.find((s) => s.id === galaxy.homeworldId)!;
+  homeworld.occupation = 'integrated';
+  if (homeworld.planet) homeworld.planet.integration = 100;
   return {
     v: 1,
     seed,
@@ -110,31 +117,16 @@ const stageFns: Record<StageName, StageFn> = {
   resources: (d) => applyIncome(d),
   /** 2. Progress automatic development. — C9. */
   development: () => {},
-  /** 3. Advance occupation stability. — C8/C10 (garrison, rebellion). */
-  occupation: () => {},
+  /** 3. Advance occupation stability. */
+  occupation: (d) => applyOccupation(d),
   /** 4. Process fleet missions and arrivals. — C13/C14 support fleets. */
   fleets: (d) => resolveFleetMovement(d),
-  /** 5. Process rival faction decisions. — C8/C11. */
-  rivals: () => {},
+  /** 5. Process rival faction decisions. — C11 formalizes the budget. */
+  rivals: (d) => applyRivals(d),
   /** 6. Advance stellar instability and events. — C15/C16, C29. */
   stars: () => {},
-  /**
-   * 7. Evaluate victory and defeat. — C8 adds the full rules (deadline,
-   *    integration, no-recovery). C3: total wipe only.
-   */
-  winLose: (d) => {
-    if (d.status !== 'active') return;
-    const holdsAnything = d.galaxy.systems.some((s) => s.ownerId === 'player');
-    if (!holdsAnything) {
-      d.status = 'defeat';
-      d.defeatReason = 'total';
-      d.log.push({
-        tick: d.tick,
-        kind: 'warning',
-        text: 'The empire no longer holds a single system. The Republic thanks you for your service.',
-      });
-    }
-  },
+  /** 7. Evaluate victory and defeat. */
+  winLose: (d) => evaluateWinLose(d),
 };
 
 export interface TickOptions {
@@ -188,8 +180,7 @@ export type SimAction =
  * major planetary actions). Building and rearming are instant (C6) — they
  * change state but never the clock. Each future action is added here when
  * it ships, with tests.
- */
-export const TIME_ADVANCING_ACTIONS: ReadonlySet<SimAction['type']> = new Set([
+ */export const TIME_ADVANCING_ACTIONS: ReadonlySet<SimAction['type']> = new Set([
   'WAIT',
   'TRAVEL',
   'REPAIR',
@@ -313,9 +304,4 @@ function beginAttack(state: GameState, targetId: string, stance: Stance): GameSt
   const d = structuredClone(state) as GameState;
   resolveBattle(d, targetId, stance);
   return runYears(d, 1);
-}
-
-/** Total ships in a fleet (UI + C6 strength derivation). */
-export function totalShips(fleet: { ships: { interceptor: number; cruiser: number; transport: number } }): number {
-  return fleet.ships.interceptor + fleet.ships.cruiser + fleet.ships.transport;
 }

@@ -6,12 +6,8 @@ import {
   planTravel,
 } from '../src/engine/movement';
 import { MAX_JUMP_RANGE, MOVE } from '../src/data/balance';
-import {
-  TIME_ADVANCING_ACTIONS,
-  dispatchSim,
-  newGame,
-  totalShips,
-} from '../src/engine/simulation';
+import { TIME_ADVANCING_ACTIONS, dispatchSim, newGame } from '../src/engine/simulation';
+import { totalShips } from '../src/engine/fleets';
 import { empireIncome } from '../src/engine/economy';
 import type { GameState } from '../src/engine/types';
 

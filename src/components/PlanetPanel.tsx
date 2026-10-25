@@ -6,6 +6,7 @@
 import type { ReactNode } from 'react';
 import type { Fleet, System } from '../engine/types';
 import { STAR_COLORS } from '../data/names';
+import { recommendedGarrison } from '../engine/occupation';
 
 const ROMAN = ['I', 'II', 'III', 'IV', 'V'] as const;
 
@@ -93,6 +94,21 @@ export function PlanetPanel({ system, ownerName, fleet, footer }: PlanetPanelPro
               value={`${system.instability}/100`}
               warn
             />
+          )}
+          {system.ownerId === 'player' && p && system.occupation !== 'none' && (
+            system.occupation === 'integrated' ? (
+              <Row label="Occupation" value="Integrated" />
+            ) : (
+              <>
+                <Row label="Integration" value={`${p.integration}%`} />
+                <Row
+                  label="Garrison"
+                  value={`${p.garrison} (recommended ${recommendedGarrison(p)})`}
+                  warn={p.garrison < recommendedGarrison(p)}
+                />
+                <Row label="Stability" value={`${p.stability}`} warn={p.stability < 40} />
+              </>
+            )
           )}
           {shipText && (
             <p className="fleet-line">
