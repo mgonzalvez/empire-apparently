@@ -123,6 +123,8 @@ export interface Fleet {
   ships: FleetShips;
   /** Hull condition 0..100 (core §6; C6 repair/refit). */
   hull: number;
+  /** Invasion troops aboard (0..maxTroops; C6 rearm, C7/C8 consume). */
+  troops: number;
   orders: { type: FleetOrderType; targetId: string | null };
   /** Active voyage (C4 travel); null while docked. */
   travel: null | {

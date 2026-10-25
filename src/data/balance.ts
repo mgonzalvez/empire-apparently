@@ -144,3 +144,23 @@ export const ECON = {
     balanced: { credits: 2, materials: 2, fuel: 2 },
   },
 } as const;
+
+/** Fleet construction & condition (C6; core §6, PLAN §8). Initial values — tuned in C12/C34. */
+export const FLEET = {
+  /** Build costs (credits, materials). Construction is instant (0 ticks). */
+  cost: {
+    interceptor: { credits: 20, materials: 10 },
+    cruiser: { credits: 60, materials: 40 },
+    transport: { credits: 40, materials: 30 },
+  },
+  /** Orbital combat weight per ship class (C7 combat uses the same values). */
+  combatWeight: { interceptor: 2, cruiser: 6, transport: 1 },
+  /** Troops carried per transport (invasion capacity). */
+  troopsPerTransport: 10,
+  /** Full hull restoration — exactly 1 year, time-advancing. */
+  repairCost: { credits: 30, materials: 0 },
+  /** Rearm cost per missing troop (instant, shipyards only). */
+  rearmCostPerTroop: 2,
+  /** A shipyard is a PLAYER world with Fortress spec or development ≥ this. */
+  shipyardMinDev: 3,
+} as const;

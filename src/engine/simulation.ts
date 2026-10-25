@@ -14,8 +14,9 @@ import { hashSeed, Rng } from './random';
 import { generateGalaxy } from './galaxy';
 import { resolveFleetMovement, planTravel } from './movement';
 import { applyIncome } from './economy';
-import { CAMPAIGN, GALAXY } from '../data/balance';
-import type { GameState } from './types';
+import { buildCost, canBuild, canRearm, canRepair, clampTroops, combatStrength, maxTroops, rearmCost, repairCost } from './fleets';
+import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
+import type { GameState, ShipClass } from './types';
 
 // ── New game ─────────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
       systemId: galaxy.homeworldId,
       ships: { ...CAMPAIGN.startingFleetShips },
       hull: 100,
+      troops: CAMPAIGN.startingFleetShips.transport * FLEET.troopsPerTransport,
       orders: { type: 'hold', targetId: null },
       travel: null,
     },
@@ -173,23 +175,45 @@ export function runYears(state: GameState, years: number): GameState {
  */
 export type SimAction =
   | { type: 'WAIT'; years?: number }
-  | { type: 'TRAVEL'; destinationId: string };
-// C6: | { type: 'BUILD'; ship: ShipClass } | { type: 'REPAIR' }
+  | { type: 'TRAVEL'; destinationId: string }
+  | { type: 'REPAIR' } // exactly 1 year (time-advancing)
+  | { type: 'BUILD'; ship: ShipClass } // instant, 0 ticks
+  | { type: 'REARM' }; // instant, 0 ticks
 
+/**
+ * The ONLY actions that advance time (core §4: travel, waiting, repair,
+ * major planetary actions). Building and rearming are instant (C6) — they
+ * change state but never the clock. Each future action is added here when
+ * it ships, with tests.
+ */
 export const TIME_ADVANCING_ACTIONS: ReadonlySet<SimAction['type']> = new Set([
   'WAIT',
   'TRAVEL',
+  'REPAIR',
 ]);
 
 /** Pure dispatch: action → next state. Terminal campaigns are frozen. */
 export function dispatchSim(state: GameState, action: SimAction): GameState {
-  if (!TIME_ADVANCING_ACTIONS.has(action.type)) return state;
   if (state.status !== 'active') return state;
+  // Time-advancing actions must be on the ledger (core §4).
+  if (TIME_ADVANCING_ACTIONS.has(action.type)) {
+    switch (action.type) {
+      case 'WAIT':
+        return runYears(state, Math.max(1, Math.min(action.years ?? 1, 999)));
+      case 'TRAVEL':
+        return beginTravel(state, action.destinationId);
+      case 'REPAIR':
+        return beginRepair(state);
+    }
+  }
   switch (action.type) {
-    case 'WAIT':
-      return runYears(state, Math.max(1, Math.min(action.years ?? 1, 999)));
-    case 'TRAVEL':
-      return beginTravel(state, action.destinationId);
+    case 'BUILD':
+      return buildShip(state, action.ship);
+    case 'REARM':
+      return rearm(state);
+    default:
+      // Unknown/unlisted actions never change anything (core §4).
+      return state;
   }
 }
 
@@ -218,6 +242,60 @@ function beginTravel(state: GameState, destinationId: string): GameState {
     text: `${d.flagship.name} sets course for ${dest.explored ? dest.name : 'the uncharted system'} (${quote.bandName}, ${quote.fuelCost} fuel).`,
   });
   return runYears(d, 1);
+}
+
+/**
+ * REPAIR (core §4: repair advances time; PLAN §8: repair 1 year). Pay the
+ * cost, restore the hull, advance exactly one year.
+ */
+function beginRepair(state: GameState): GameState {
+  if (!canRepair(state).ok) return state;
+  const d = structuredClone(state) as GameState;
+  d.empire.credits -= repairCost().credits;
+  d.flagship.hull = 100;
+  d.log.push({
+    tick: d.tick,
+    kind: 'economy',
+    text: `Dockyards restore the ${d.flagship.name}'s hull to full.`,
+  });
+  return runYears(d, 1);
+}
+
+/**
+ * BUILD (core §6: instant construction at shipyards). No time passes —
+ * the clock only moves for travel, waiting, and repair (core §4).
+ */
+function buildShip(state: GameState, ship: ShipClass): GameState {
+  if (!canBuild(state, ship).ok) return state;
+  const d = structuredClone(state) as GameState;
+  const cost = buildCost(ship);
+  d.empire.credits -= cost.credits;
+  d.empire.materials -= cost.materials;
+  d.flagship.ships[ship] += 1;
+  clampTroops(d.flagship);
+  const at = d.galaxy.systems.find((s) => s.id === d.flagship.systemId)!;
+  d.log.push({
+    tick: d.tick,
+    kind: 'economy',
+    text: `Built a ${ship} at ${at.name} (combat strength ${combatStrength(d.flagship)}).`,
+  });
+  return d;
+}
+
+/** REARM (core §6: refill invasion personnel) — instant, shipyards only. */
+function rearm(state: GameState): GameState {
+  if (!canRearm(state).ok) return state;
+  const d = structuredClone(state) as GameState;
+  const cost = rearmCost(d.flagship);
+  d.empire.credits -= cost;
+  d.flagship.troops = maxTroops(d.flagship);
+  const at = d.galaxy.systems.find((s) => s.id === d.flagship.systemId)!;
+  d.log.push({
+    tick: d.tick,
+    kind: 'economy',
+    text: `Troops board at ${at.name} (invasion strength ${d.flagship.troops}).`,
+  });
+  return d;
 }
 
 /** Total ships in a fleet (UI + C6 strength derivation). */

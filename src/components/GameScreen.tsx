@@ -10,6 +10,7 @@ import { inTransitPosition } from '../engine/movement';
 import type { Fleet, System } from '../engine/types';
 import { EmpireBar } from './EmpireBar';
 import { EventLog } from './EventLog';
+import { FleetPanel } from './FleetPanel';
 import { GalaxyMap } from './GalaxyMap';
 import { PlanetPanel } from './PlanetPanel';
 import { TravelDialog } from './TravelDialog';
@@ -95,6 +96,7 @@ export function GameScreen() {
           </div>
         </div>
         <div className="game-right">
+          <FleetPanel game={game} />
           <PlanetPanel
             system={selected}
             ownerName={selected ? ownerName(selected) : ''}
