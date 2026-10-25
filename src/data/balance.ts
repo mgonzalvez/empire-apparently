@@ -127,3 +127,20 @@ export type MoveBand = (typeof MOVE.bands)[number];
 /** The clear maximum jump range (core §6: no hidden teleportation). */
 export const MAX_JUMP_RANGE: number =
   MOVE.bands[MOVE.bands.length - 1].maxDistance;
+
+/**
+ * Economy (C5; core §5, PLAN §8 table).
+ * Production per galactic year = productionBySpec[spec] × development (1..5).
+ * Initial table — tuned in C12/C34.
+ * The table's "special" column is implemented with its feature:
+ * Industrial shipyard discount (C6), Fortress defense/fleet support (C8/C10).
+ */
+export const ECON = {
+  productionBySpec: {
+    industrial: { credits: 1, materials: 3, fuel: 1 },
+    mining: { credits: 1, materials: 2, fuel: 2 },
+    economic: { credits: 3, materials: 1, fuel: 1 },
+    fortress: { credits: 1, materials: 1, fuel: 1 },
+    balanced: { credits: 2, materials: 2, fuel: 2 },
+  },
+} as const;

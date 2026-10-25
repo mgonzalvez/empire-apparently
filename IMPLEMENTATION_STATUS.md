@@ -1,6 +1,6 @@
 # Implementation Status — Empire, Apparently
 
-Last updated: 2026-10-25 — **C4 complete.** Next chunk: **C5** (Economy base).
+Last updated: 2026-10-25 — **C5 complete.** Next chunk: **C6** (Flagship & construction).
 
 Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 "Done" means the chunk's acceptance criteria passed and are committed.
@@ -33,7 +33,7 @@ Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 | C2 | Seeded galaxy generation | A | ✅ | sfc32 Rng (serializable state); 20-system generator with fairness invariants (secure homeworld, rivals ≥ grid-2, ≥ 2 weak adjacent targets, no candidates in opening zone, default supernova freq = low); 8-system fixture galaxy; 80 tests, 100-seed invariant sweep; gen ≈ 0.3 ms avg |
 | C3 | Engine core + UI shell | B | ✅ | GameState v1 (PLAN §7 fields, JSON round-trip tested); 7-stage tick pipeline in core §4 canonical order (order + cross-stage visibility tested); action ledger — only `WAIT` advances time; store keeps selection as view state (navigation proven zero-time); SVG map (fog, routes, faction colors, homeworld ring, fleet badges, candidate ✳); PlanetPanel/EmpireBar/EventLog; Wait-one-year button; title screen with reproducible seed input; 103 tests |
 | C4 | Travel, fuel, range | B | ✅ | `engine/movement.ts`: distance bands (close ≤30u/1y, medium ≤60u/2y, far ≤80u/3y; fuel = ships × band rate, paid at departure); `TRAVEL` on the time-advancing ledger — departure advances 1 year, voyage resolves on its exact arrival tick in the fleets stage; max jump range 80u enforced with stated reason; TravelDialog quote = engine quote (shown = simulated: distance, years, fuel, known defenders); in-transit flagship rendered at interpolated position with route line; arrival reveals destination (name withheld until then); in-transit blocks new courses; 121 tests |
-| C5 | Economy base | B | ⬜ | |
+| C5 | Economy base | B | ✅ | `ECON` table (PLAN §8 values verbatim) in balance.ts; `engine/economy.ts`: production = table × development (all 25 spec×dev combos tested), `empireIncome` = table sum over owned inhabited non-destroyed systems; resources stage (core §4 step 1) applies it; EmpireBar shows totals + per-year income from the same function the engine uses (drift impossible); no-negative guarantee: spends blocked when short, production additive — 60 mixed actions stay ≥ 0; 128 tests |
 | C6 | Flagship & construction | B | ⬜ | |
 | C7 | Automatic combat | B | ⬜ | |
 | C8 | Conquest, occupation, rivals v1, win/lose | B | ⬜ | Gate M1 |

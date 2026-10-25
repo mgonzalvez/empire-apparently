@@ -13,6 +13,7 @@
 import { hashSeed, Rng } from './random';
 import { generateGalaxy } from './galaxy';
 import { resolveFleetMovement, planTravel } from './movement';
+import { applyIncome } from './economy';
 import { CAMPAIGN, GALAXY } from '../data/balance';
 import type { GameState } from './types';
 
@@ -101,8 +102,8 @@ export const STAGE_ORDER: readonly StageName[] = [
 export type StageFn = (draft: GameState, rng: Rng, year: number) => void;
 
 const stageFns: Record<StageName, StageFn> = {
-  /** 1. Produce planetary resources. — C5: specialization×development table. */
-  resources: () => {},
+  /** 1. Produce planetary resources. */
+  resources: (d) => applyIncome(d),
   /** 2. Progress automatic development. — C9. */
   development: () => {},
   /** 3. Advance occupation stability. — C8/C10 (garrison, rebellion). */

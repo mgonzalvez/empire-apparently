@@ -12,6 +12,7 @@ import {
   newGame,
   totalShips,
 } from '../src/engine/simulation';
+import { empireIncome } from '../src/engine/economy';
 import type { GameState } from '../src/engine/types';
 
 const SEED = 42;
@@ -145,8 +146,9 @@ describe('fuel gate', () => {
     const g = rig(10, 10, 30, 10);
     const cost = SHIPS * MOVE.bands[0].fuelPerShip;
     g.empire.fuel = cost;
+    const income = empireIncome(g.galaxy.systems).fuel;
     const next = dispatchSim(g, { type: 'TRAVEL', destinationId: g.galaxy.systems[5].id });
-    expect(next.empire.fuel).toBe(0);
+    expect(next.empire.fuel).toBe(income); // cost - cost + one year of production
     expect(next.flagship.systemId).toBe(g.galaxy.systems[5].id);
   });
 });
@@ -156,9 +158,10 @@ describe('voyage lifecycle (core §4: every elapsed year simulated in sequence)'
     const g = rig(10, 10, 35, 10); // 25 → close, 1 year
     const destId = g.galaxy.systems[5].id;
     const fuelBefore = g.empire.fuel;
+    const income = empireIncome(g.galaxy.systems).fuel; // C5: the year also produces
     const next = dispatchSim(g, { type: 'TRAVEL', destinationId: destId });
     expect(next.tick).toBe(1);
-    expect(next.empire.fuel).toBe(fuelBefore - SHIPS * MOVE.bands[0].fuelPerShip);
+    expect(next.empire.fuel).toBe(fuelBefore - SHIPS * MOVE.bands[0].fuelPerShip + income);
     expect(next.flagship.travel).toBeNull();
     expect(next.flagship.systemId).toBe(destId);
     expect(next.flagship.orders).toEqual({ type: 'hold', targetId: null });
@@ -183,8 +186,12 @@ describe('voyage lifecycle (core §4: every elapsed year simulated in sequence)'
     expect(arrived.tick).toBe(2);
     expect(arrived.flagship.travel).toBeNull();
     expect(arrived.flagship.systemId).toBe(destId);
-    // Fuel was paid once, at departure — not per year.
-    expect(arrived.empire.fuel).toBe(g.empire.fuel - SHIPS * MOVE.bands[1].fuelPerShip);
+    // Fuel was paid once, at departure — not per year. (C5: each of the two
+    // elapsed years also produced income.)
+    const income = empireIncome(g.galaxy.systems).fuel;
+    expect(arrived.empire.fuel).toBe(
+      g.empire.fuel - SHIPS * MOVE.bands[1].fuelPerShip + 2 * income,
+    );
     expect(arrived.log.some((e) => e.text.includes('arrives at'))).toBe(true);
   });
 
