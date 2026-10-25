@@ -12,6 +12,7 @@
 
 import { hashSeed, Rng } from './random';
 import { generateGalaxy } from './galaxy';
+import { resolveFleetMovement, planTravel } from './movement';
 import { CAMPAIGN, GALAXY } from '../data/balance';
 import type { GameState } from './types';
 
@@ -41,6 +42,7 @@ export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
       ships: { ...CAMPAIGN.startingFleetShips },
       hull: 100,
       orders: { type: 'hold', targetId: null },
+      travel: null,
     },
     supports: [],
     rivals: [],
@@ -105,8 +107,8 @@ const stageFns: Record<StageName, StageFn> = {
   development: () => {},
   /** 3. Advance occupation stability. — C8/C10 (garrison, rebellion). */
   occupation: () => {},
-  /** 4. Process fleet missions and arrivals. — C4 travel, C13/C14 support. */
-  fleets: () => {},
+  /** 4. Process fleet missions and arrivals. — C13/C14 support fleets. */
+  fleets: (d) => resolveFleetMovement(d),
   /** 5. Process rival faction decisions. — C8/C11. */
   rivals: () => {},
   /** 6. Advance stellar instability and events. — C15/C16, C29. */
@@ -168,12 +170,14 @@ export function runYears(state: GameState, years: number): GameState {
  * major planetary actions). Each future action is added here when it ships,
  * with tests — so nothing can advance time without being on this list.
  */
-export type SimAction = { type: 'WAIT'; years?: number };
-// C4: | { type: 'TRAVEL'; destinationId: string }
+export type SimAction =
+  | { type: 'WAIT'; years?: number }
+  | { type: 'TRAVEL'; destinationId: string };
 // C6: | { type: 'BUILD'; ship: ShipClass } | { type: 'REPAIR' }
 
 export const TIME_ADVANCING_ACTIONS: ReadonlySet<SimAction['type']> = new Set([
   'WAIT',
+  'TRAVEL',
 ]);
 
 /** Pure dispatch: action → next state. Terminal campaigns are frozen. */
@@ -183,7 +187,36 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
   switch (action.type) {
     case 'WAIT':
       return runYears(state, Math.max(1, Math.min(action.years ?? 1, 999)));
+    case 'TRAVEL':
+      return beginTravel(state, action.destinationId);
   }
+}
+
+/**
+ * TRAVEL (core §4: travel advances time; core §6: fuel by fleet size +
+ * distance). Quote first — what the player saw is what gets simulated. On
+ * success: pay fuel, set the voyage, advance the departure year (1); the
+ * voyage resolves on its exact arrival tick in the fleets stage.
+ */
+function beginTravel(state: GameState, destinationId: string): GameState {
+  const quote = planTravel(state, destinationId);
+  if (!quote.ok) return state;
+  const d = structuredClone(state) as GameState;
+  const dest = d.galaxy.systems.find((s) => s.id === destinationId)!;
+  d.empire.fuel -= quote.fuelCost;
+  d.flagship.travel = {
+    fromId: d.flagship.systemId,
+    toId: destinationId,
+    departTick: d.tick,
+    arriveTick: d.tick + (quote.years ?? 1),
+  };
+  d.flagship.orders = { type: 'travel', targetId: destinationId };
+  d.log.push({
+    tick: d.tick,
+    kind: 'info',
+    text: `${d.flagship.name} sets course for ${dest.explored ? dest.name : 'the uncharted system'} (${quote.bandName}, ${quote.fuelCost} fuel).`,
+  });
+  return runYears(d, 1);
 }
 
 /** Total ships in a fleet (UI + C6 strength derivation). */

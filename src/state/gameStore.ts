@@ -26,6 +26,7 @@ export type StoreAction =
   | { type: 'MENU' }
   | { type: 'SELECT_SYSTEM'; systemId: string | null }
   | { type: 'WAIT'; years?: number }
+  | { type: 'TRAVEL'; destinationId: string }
   | { type: 'LOAD'; state: GameState }; // C35: schema validation with import
 
 let current: StoreState = { game: null, selectedSystemId: null };
@@ -63,6 +64,9 @@ function reduce(s: StoreState, action: StoreAction): StoreState {
       if (!s.game) return s;
       return { ...s, selectedSystemId: action.systemId };
     case 'WAIT':
+      if (!s.game) return s;
+      return { ...s, game: dispatchSim(s.game, action) };
+    case 'TRAVEL':
       if (!s.game) return s;
       return { ...s, game: dispatchSim(s.game, action) };
     case 'LOAD':

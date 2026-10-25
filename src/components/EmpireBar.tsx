@@ -1,6 +1,6 @@
 /**
- * Empire bar (C3): year, global resources, flagship summary.
- * Placeholder totals — the production table arrives in C5.
+ * Empire bar (C4): year, global resources, flagship summary (+ transit).
+ * Resource totals tick up with the economy (C5).
  */
 
 import type { GameState } from '../engine/types';
@@ -20,7 +20,9 @@ export function EmpireBar({ game }: { game: GameState }) {
         <span>F {Math.floor(game.empire.fuel)}</span>
       </div>
       <div className="empire-fleet">
-        {f.name} · {totalShips(f)} ships
+        {f.travel
+          ? `${f.name} — in transit, arrives Y${f.travel.arriveTick}`
+          : `${f.name} · ${totalShips(f)} ships`}
       </div>
     </header>
   );

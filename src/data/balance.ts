@@ -108,3 +108,22 @@ export const CAMPAIGN = {
   /** Event log cap (oldest entries trimmed first). */
   maxLogEntries: 400,
 } as const;
+
+/** Travel (C4; core §6: fuel by fleet size and distance, clear range rule). */
+export const MOVE = {
+  /**
+   * Distance bands (map units; inclusive maxDistance). First matching band
+   * wins. Beyond the last band's maxDistance → out of range (stage it).
+   */
+  bands: [
+    { name: 'close', maxDistance: 30, years: 1, fuelPerShip: 1 },
+    { name: 'medium', maxDistance: 60, years: 2, fuelPerShip: 3 },
+    { name: 'far', maxDistance: 80, years: 3, fuelPerShip: 6 },
+  ],
+} as const;
+
+export type MoveBand = (typeof MOVE.bands)[number];
+
+/** The clear maximum jump range (core §6: no hidden teleportation). */
+export const MAX_JUMP_RANGE: number =
+  MOVE.bands[MOVE.bands.length - 1].maxDistance;

@@ -114,13 +114,23 @@ export type FleetOrderType = 'hold' | 'travel' | 'attack' | 'reinforce';
 export interface Fleet {
   id: string;
   name: string;
-  /** Current location (core §6). C4 adds travel status on top. */
+  /**
+   * Current location (core §6). While `travel` is set, this is the ORIGIN
+   * system and the map interpolates the ship's position (C4).
+   */
   systemId: string;
   /** Ship quantities by class (core §6). */
   ships: FleetShips;
   /** Hull condition 0..100 (core §6; C6 repair/refit). */
   hull: number;
   orders: { type: FleetOrderType; targetId: string | null };
+  /** Active voyage (C4 travel); null while docked. */
+  travel: null | {
+    fromId: string;
+    toId: string;
+    departTick: number;
+    arriveTick: number;
+  };
 }
 
 // ── Log & campaign state ────────────────────────────────────────────────

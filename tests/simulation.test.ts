@@ -66,7 +66,7 @@ describe('state serializability (PLAN §7)', () => {
 
 describe('time advancement (core §4)', () => {
   it('only listed actions advance time', () => {
-    expect([...TIME_ADVANCING_ACTIONS].sort()).toEqual(['WAIT']);
+    expect([...TIME_ADVANCING_ACTIONS].sort()).toEqual(['TRAVEL', 'WAIT']);
   });
 
   it('WAIT advances exactly one galactic year by default', () => {
@@ -82,7 +82,7 @@ describe('time advancement (core §4)', () => {
 
   it('unlisted actions cannot advance time', () => {
     const g = newGame(SEED);
-    const next = dispatchSim(g, { type: 'TRAVEL' } as never);
+    const next = dispatchSim(g, { type: 'BUILD' } as never);
     expect(next).toBe(g);
   });
 

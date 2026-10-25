@@ -3,6 +3,7 @@
  * Factual only — advisor narration never enters this panel (PLAN §10).
  */
 
+import type { ReactNode } from 'react';
 import type { Fleet, System } from '../engine/types';
 import { STAR_COLORS } from '../data/names';
 
@@ -31,9 +32,11 @@ export interface PlanetPanelProps {
   ownerName: string;
   /** Fleet currently in the system (flagship first), if any. */
   fleet: Fleet | null;
+  /** Travel controls (C4) — rendered at the bottom of the panel. */
+  footer?: ReactNode;
 }
 
-export function PlanetPanel({ system, ownerName, fleet }: PlanetPanelProps) {
+export function PlanetPanel({ system, ownerName, fleet, footer }: PlanetPanelProps) {
   if (!system) {
     return (
       <section className="panel planet-panel">
@@ -98,6 +101,8 @@ export function PlanetPanel({ system, ownerName, fleet }: PlanetPanelProps) {
           )}
         </>
       )}
+
+      {footer && <div className="panel-footer">{footer}</div>}
     </section>
   );
 }

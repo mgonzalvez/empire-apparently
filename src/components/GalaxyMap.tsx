@@ -16,6 +16,8 @@ export interface GalaxyMapProps {
   colorFor: (system: System) => string | null;
   shipsBySystem: ReadonlyMap<string, number>;
   onSelect: (systemId: string) => void;
+  /** Interpolated flagship position while a voyage is under way (C4). */
+  inTransit?: null | { x: number; y: number; from: System; to: System };
 }
 
 function routeEdges(systems: System[]): Array<[System, System]> {
@@ -40,6 +42,7 @@ export function GalaxyMap({
   colorFor,
   shipsBySystem,
   onSelect,
+  inTransit,
 }: GalaxyMapProps) {
   return (
     <svg
@@ -61,6 +64,30 @@ export function GalaxyMap({
             strokeDasharray="1.6 1.2"
           />
         ) : null,
+      )}
+      {inTransit && (
+        <>
+          <line
+            x1={inTransit.from.x}
+            y1={inTransit.from.y}
+            x2={inTransit.to.x}
+            y2={inTransit.to.y}
+            stroke="var(--accent)"
+            strokeWidth={0.5}
+            strokeDasharray="2 1.4"
+            opacity={0.7}
+          />
+          <circle
+            cx={inTransit.x}
+            cy={inTransit.y}
+            r={3.2}
+            fill="none"
+            stroke="var(--accent)"
+            strokeWidth={0.3}
+            opacity={0.6}
+          />
+          <circle cx={inTransit.x} cy={inTransit.y} r={1.9} fill="var(--accent)" />
+        </>
       )}
       {systems.map((s) => (
         <StarSystem
