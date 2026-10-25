@@ -1,0 +1,120 @@
+/* Empire, Apparently — theme tokens (C1)
+   Light/dark via html[data-theme], pre-painted by the inline script in index.html. */
+
+:root {
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
+  color-scheme: light dark;
+}
+
+[data-theme='light'] {
+  --bg: #f2f0e9;
+  --surface: #fbfaf6;
+  --surface-2: #e9e6dc;
+  --ink: #20242c;
+  --ink-muted: #5c6270;
+  --line: #cfccc0;
+  --accent: #3b5bdb;
+  --accent-2: #7048e8;
+  --ok: #2f9e44;
+  --warn: #e8890c;
+  --danger: #e03131;
+}
+
+[data-theme='dark'] {
+  --bg: #0c1018;
+  --surface: #151b27;
+  --surface-2: #1d2534;
+  --ink: #e8ecf4;
+  --ink-muted: #98a2b3;
+  --line: #2a3446;
+  --accent: #748ffc;
+  --accent-2: #9775fa;
+  --ok: #51cf66;
+  --warn: #ffa94d;
+  --danger: #ff6b6b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  line-height: 1.5;
+}
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-header {
+  padding: 2.5rem 1.5rem 1rem;
+  text-align: center;
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  letter-spacing: 0.12em;
+}
+
+.tagline {
+  margin: 0.4rem 0 0;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+
+.placeholder {
+  flex: 1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
+.placeholder-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+  max-width: 40rem;
+  color: var(--ink-muted);
+}
+
+.placeholder-card code {
+  background: var(--surface-2);
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+}
+
+.app-footer {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 1.5rem 2rem;
+}
+
+.app-footer button {
+  font: inherit;
+  color: var(--ink);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.45rem 1rem;
+  cursor: pointer;
+}
+
+.app-footer button:hover {
+  border-color: var(--accent);
+}

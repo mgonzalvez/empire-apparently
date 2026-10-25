@@ -1,7 +1,6 @@
 # Implementation Status — Empire, Apparently
 
-Last updated: 2026-10-25 — **Planning complete, implementation not started.**
-Next chunk: **C1** (Toolchain & app skeleton).
+Last updated: 2026-10-25 — **C1 complete.** Next chunk: **C2** (Seeded galaxy generation).
 
 Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 "Done" means the chunk's acceptance criteria passed and are committed.
@@ -30,7 +29,7 @@ Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 
 | Chunk | Title | Phase | Status | Notes |
 |---|---|---|---|---|
-| C1 | Toolchain & app skeleton | A | ⬜ | |
+| C1 | Toolchain & app skeleton | A | ✅ | React 19 / Vite 8 / TS 7 / Vitest 5; base path verified under subpath via preview server; theme toggle persists; CI workflow in place |
 | C2 | Seeded galaxy generation | A | ⬜ | |
 | C3 | Engine core + UI shell | B | ⬜ | |
 | C4 | Travel, fuel, range | B | ⬜ | |
@@ -67,8 +66,8 @@ Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 | C35 | Save polish | M | ⬜ | |
 | C36 | Deployment & family integration | M | ⬜ | Gate M6 |
 
-## Open decisions (PLAN §18)
+## Open decisions (PLAN §18) — all resolved 2026-10-25
 
-- [ ] Core spec version: v2.0 (provided) treated as canonical — confirm.
-- [ ] Deployment: subdirectory (default) vs subdomain.
-- [ ] Mandate 120 years / victory integration 60% defaults — confirm or tune.
+- [x] Core spec version: **v2.0 is canonical** (confirmed).
+- [x] Deployment: **subdirectory `mgonzalvez.github.io/empire-apparently`** (confirmed; repo `mgonzalvez/empire-apparently`).
+- [x] Mandate **120 years** / victory integration **60%** defaults accepted (tunable later in `balance.ts`).

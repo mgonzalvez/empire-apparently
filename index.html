@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Empire, Apparently</title>
+    <meta
+      name="description"
+      content="You appear to be in charge. This has surprised everyone. A humorous galactic conquest strategy game."
+    />
+    <script>
+      // Applies the stored or system theme BEFORE CSS loads to prevent a flash.
+      // Family convention — never remove this script.
+      (function () {
+        try {
+          var stored = localStorage.getItem('empire-apparently-theme');
+          var theme =
+            stored === 'light' || stored === 'dark'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: light)').matches
+                ? 'light'
+                : 'dark';
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="/src/styles/theme.css" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

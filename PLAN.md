@@ -342,8 +342,8 @@ Playable builds at every gate. The sim core is frozen after Phase C; later phase
 - **Alternative:** own subdomain `empire.gonzhome.us` (`base: '/'`, CNAME → `mgonzalvez.github.io`, Cloudflare DNS-only per family convention). Decide before C36.
 - Family integration at C36: master `AGENTS.md` updated (18 → 19 sites), Related Sites link on the title screen, theme toggle per family convention.
 
-## 18. Open items (user)
+## 18. Open items (user) — resolved 2026-10-25
 
-1. Core spec version: provided doc is **v2.0**, brief said v3.0 — confirm v2.0 is canonical.
-2. Deployment: subdirectory (default) vs subdomain.
-3. Mandate deadline 120 years + victory integration threshold 60% — accept as defaults (tunable in `balance.ts` later).
+1. Core spec: **v2.0 confirmed canonical.**
+2. Deployment: **subdirectory `mgonzalvez.github.io/empire-apparently`** confirmed (repo: `mgonzalvez/empire-apparently`).
+3. Mandate deadline 120 years + victory integration threshold 60% **accepted** as defaults (tunable in `balance.ts`).
