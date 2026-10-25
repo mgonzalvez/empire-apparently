@@ -5,7 +5,7 @@ import {
   inTransitPosition,
   planTravel,
 } from '../src/engine/movement';
-import { MAX_JUMP_RANGE, MOVE } from '../src/data/balance';
+import { ECON, MAX_JUMP_RANGE, MOVE } from '../src/data/balance';
 import { TIME_ADVANCING_ACTIONS, dispatchSim, newGame } from '../src/engine/simulation';
 import { totalShips } from '../src/engine/fleets';
 import { empireIncome } from '../src/engine/economy';
@@ -183,10 +183,13 @@ describe('voyage lifecycle (core §4: every elapsed year simulated in sequence)'
     expect(arrived.flagship.travel).toBeNull();
     expect(arrived.flagship.systemId).toBe(destId);
     // Fuel was paid once, at departure — not per year. (C5: each of the two
-    // elapsed years also produced income.)
-    const income = empireIncome(g.galaxy.systems).fuel;
+    // elapsed years also produced income; C9: the homeworld develops d3→d4
+    // during year 1, so year 2's income is one development level higher.)
+    const income1 = empireIncome(g.galaxy.systems).fuel;
+    const home = g.galaxy.systems.find((s) => s.id === g.galaxy.homeworldId)!;
+    const devBump = home.planet ? ECON.productionBySpec[home.planet.specialization].fuel : 0;
     expect(arrived.empire.fuel).toBe(
-      g.empire.fuel - SHIPS * MOVE.bands[1].fuelPerShip + 2 * income,
+      g.empire.fuel - SHIPS * MOVE.bands[1].fuelPerShip + income1 + (income1 + devBump),
     );
     expect(arrived.log.some((e) => e.text.includes('arrives at'))).toBe(true);
   });

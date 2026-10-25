@@ -5,7 +5,7 @@
  */
 
 import type { System } from '../engine/types';
-import { STAR_COLORS } from '../data/names';
+import { SPEC_BADGE, STAR_COLORS } from '../data/names';
 
 export interface StarSystemProps {
   system: System;
@@ -65,6 +65,14 @@ export function StarSystem({
             />
           )}
           {!s.destroyed && <circle r={1.1} fill={STAR_COLORS[s.starClass]} />}
+          {s.planet && !s.destroyed && (
+            <g transform="translate(-3.9 -3.9)">
+              <circle r={1.9} fill="var(--bg)" stroke="var(--line)" strokeWidth={0.35} />
+              <text y={0.8} textAnchor="middle" fontSize={2} fill="var(--ink-muted)">
+                {SPEC_BADGE[s.planet.specialization]}
+              </text>
+            </g>
+          )}
           {s.supernovaCandidate && !s.destroyed && (
             <text y={-4.4} textAnchor="middle" fontSize={3.4} fill="var(--warn)">
               ✳

@@ -1,4 +1,4 @@
-import type { StarClass } from '../engine/types';
+import type { Specialization, StarClass } from '../engine/types';
 
 /**
  * Name pools (PLAN §5). All names are original (SPEC §2 — no recognizable
@@ -125,4 +125,35 @@ export const STAR_COLORS: Record<StarClass, string> = {
   white: '#dfe6f3',
   blue: '#74a4fc',
   binary: '#b197fc',
+};
+
+/**
+ * Specialization display labels + one-line notes (UI copy only). Notes
+ * describe ONLY implemented effects — the PLAN §8 "special" column items
+ * that aren't built yet (industrial build discount, fortress defense bonus)
+ * are deferred to C11/C34 and must not be advertised (core §19).
+ */
+export const SPEC_LABEL: Record<Specialization, string> = {
+  industrial: 'Industrial',
+  mining: 'Mining',
+  economic: 'Economic',
+  fortress: 'Fortress',
+  balanced: 'Balanced',
+};
+
+export const SPEC_NOTE: Record<Specialization, string> = {
+  industrial: 'Materials-heavy production.',
+  mining: 'Extra fuel and materials.',
+  economic: 'Credit-rich production.',
+  fortress: 'Counts as a shipyard at any development level.',
+  balanced: 'Even production across the board.',
+};
+
+/** Single-letter map badge (UI only, C9). */
+export const SPEC_BADGE: Record<Specialization, string> = {
+  industrial: 'i',
+  mining: 'm',
+  economic: 'e',
+  fortress: 'f',
+  balanced: 'b',
 };

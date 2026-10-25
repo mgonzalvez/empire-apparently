@@ -12,7 +12,7 @@ import {
   newGame,
   type NewGameOptions,
 } from '../engine/simulation';
-import type { GameState, ShipClass, Stance } from '../engine/types';
+import type { GameState, ShipClass, Specialization, Stance } from '../engine/types';
 
 export interface StoreState {
   /** null = title screen. */
@@ -33,6 +33,7 @@ export type StoreAction =
   | { type: 'ATTACK'; targetId: string; stance: Stance }
   | { type: 'BUILD'; ship: ShipClass }
   | { type: 'REARM' }
+  | { type: 'SPECIALIZE'; systemId: string; specialization: Specialization }
   | { type: 'DISMISS_BATTLE' }
   | { type: 'LOAD'; state: GameState }; // C35: schema validation with import
 
@@ -84,6 +85,7 @@ function reduce(s: StoreState, action: StoreAction): StoreState {
     case 'ATTACK':
     case 'BUILD':
     case 'REARM':
+    case 'SPECIALIZE':
       if (!s.game) return s;
       return { ...s, game: dispatchSim(s.game, action) };
     case 'DISMISS_BATTLE':

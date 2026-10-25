@@ -13,7 +13,7 @@ import {
   rearmCost,
 } from '../src/engine/fleets';
 import { TIME_ADVANCING_ACTIONS, dispatchSim, newGame } from '../src/engine/simulation';
-import { empireIncome } from '../src/engine/economy';
+import { developmentCost, empireIncome } from '../src/engine/economy';
 import type { Fleet, GameState, ShipClass } from '../src/engine/types';
 
 const SEED = 42;
@@ -189,12 +189,16 @@ describe('repair (acceptance: exactly 1 tick, gated)', () => {
     const g = newGame(SEED);
     g.flagship.hull = 40;
     const income = empireIncome(g.galaxy.systems).credits; // the repair year also produces
+    // C9: the homeworld (dev 3 by generation invariant) auto-develops to
+    // dev 4 during that same year, paying its transparent cost.
+    const home = g.galaxy.systems.find((s) => s.id === g.galaxy.homeworldId)!;
+    const devSpend = developmentCost(home.planet!.development)!;
     const next = dispatchSim(g, { type: 'REPAIR' });
     expect(next).not.toBe(g);
     expect(next.tick).toBe(g.tick + 1); // exactly one tick
     expect(next.flagship.hull).toBe(100);
     expect(next.empire.credits).toBe(
-      g.empire.credits - FLEET.repairCost.credits + income,
+      g.empire.credits - FLEET.repairCost.credits + income - devSpend.credits,
     );
   });
 

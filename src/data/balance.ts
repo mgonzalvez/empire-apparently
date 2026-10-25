@@ -205,3 +205,22 @@ export const RIVAL = {
   defenseTargetBase: 4,
   defenseTargetPerDev: 2,
 } as const;
+
+/**
+ * Automatic development (C9; core §9 "Planet development"): levels advance
+ * on their own each year, capped, with a transparent cost paid from the
+ * global pools. The development stage (core §4 step 2) runs AFTER income,
+ * so a world can develop on that year's production. Initial values —
+ * tuned in C12/C34.
+ */
+export const DEV = {
+  /** Development cap (core §9: capped levels). */
+  maxDevelopment: 5,
+  /** Cost to advance from level N to N+1 (index = current level 1..4). */
+  cost: {
+    1: { credits: 20, materials: 10 }, // I → II
+    2: { credits: 40, materials: 20 }, // II → III
+    3: { credits: 60, materials: 30 }, // III → IV
+    4: { credits: 80, materials: 40 }, // IV → V
+  },
+} as const;

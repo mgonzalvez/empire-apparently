@@ -13,14 +13,14 @@
 import { hashSeed, Rng } from './random';
 import { generateGalaxy } from './galaxy';
 import { resolveFleetMovement, planTravel } from './movement';
-import { applyIncome } from './economy';
+import { applyDevelopment, applyIncome, specialize } from './economy';
 import { buildCost, canBuild, canRearm, canRepair, clampTroops, combatStrength, maxTroops, rearmCost, repairCost } from './fleets';
 import { canAttack, resolveBattle } from './combat';
 import { applyOccupation } from './occupation';
 import { applyRivals } from './rivals';
 import { evaluateWinLose } from './victory';
 import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
-import type { GameState, ShipClass, Stance } from './types';
+import type { GameState, ShipClass, Specialization, Stance } from './types';
 
 // ── New game ─────────────────────────────────────────────────────────────
 
@@ -115,8 +115,8 @@ export type StageFn = (draft: GameState, rng: Rng, year: number) => void;
 const stageFns: Record<StageName, StageFn> = {
   /** 1. Produce planetary resources. */
   resources: (d) => applyIncome(d),
-  /** 2. Progress automatic development. — C9. */
-  development: () => {},
+  /** 2. Progress automatic development. */
+  development: (d) => applyDevelopment(d),
   /** 3. Advance occupation stability. */
   occupation: (d) => applyOccupation(d),
   /** 4. Process fleet missions and arrivals. — C13/C14 support fleets. */
@@ -173,7 +173,8 @@ export type SimAction =
   | { type: 'REPAIR' } // exactly 1 year (time-advancing)
   | { type: 'ATTACK'; targetId: string; stance: Stance } // exactly 1 year (time-advancing)
   | { type: 'BUILD'; ship: ShipClass } // instant, 0 ticks
-  | { type: 'REARM' }; // instant, 0 ticks
+  | { type: 'REARM' } // instant, 0 ticks
+  | { type: 'SPECIALIZE'; systemId: string; specialization: Specialization }; // instant, 0 ticks (C9)
 
 /**
  * The ONLY actions that advance time (core §4: travel, waiting, repair,
@@ -208,6 +209,8 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
       return buildShip(state, action.ship);
     case 'REARM':
       return rearm(state);
+    case 'SPECIALIZE':
+      return specialize(state, action.systemId, action.specialization);
     default:
       // Unknown/unlisted actions never change anything (core §4).
       return state;
