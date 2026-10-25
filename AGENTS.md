@@ -3,8 +3,8 @@
 ## Project overview
 
 Humorous galactic conquest strategy game (see `README.md`). Static client-side
-React/TypeScript/Vite app for GitHub Pages. **Planning is done; work proceeds
-chunk-by-chunk in `CHUNKS.md`.**
+React/TypeScript/Vite app for GitHub Pages. **Work proceeds chunk-by-chunk in
+`CHUNKS.md`; live state is in `IMPLEMENTATION_STATUS.md`.**
 
 ## Read before working
 
@@ -18,14 +18,14 @@ chunk-by-chunk in `CHUNKS.md`.**
 
 | Path | Role |
 |---|---|
-| `src/engine/` | **Pure TS simulation.** No React/DOM/storage/clocks. `dispatch(state, action) → {state, effects}`. Single serialized PRNG stream for sim (`rng`), second stream for narrative-only picks (`narrRng`). Fixed per-tick pipeline order (PLAN §6). |
-| `src/state/` | Thin React binding (`useSyncExternalStore`) + persistence (autosave, export/import, validation, restart-seed). |
-| `src/data/balance.ts` | **The only home for tunable numbers.** Documented, versioned. |
-| `src/data/` (rest) | All personality content: advisors + voice guides, dialogue pools, quirks, cultures, events, handbook, hints, tutorial scenario/steps. |
-| `src/components/` | React UI. Talks to the store, never the engine directly. |
-| `src/audio/sfx.ts` | WebAudio synth SFX, mutable. |
-| Map | SVG interactive layer over a canvas nebula/particle background. |
-| `tests/` | Vitest: one file per engine subsystem, `campaign-sim` (cruise + engaged profiles), `dialogue-variety` audit, tutorial auto-play, save round-trips, determinism replay. |
+| `src/engine/` | **Pure TS simulation.** No React/DOM/storage/clocks. `newGame(seed)`, `runYears(state, n)`, `dispatchSim(state, action) → new GameState` (pure — time advances only for actions on `TIME_ADVANCING_ACTIONS`). Single serialized PRNG stream for sim (`rng`), second stream for narrative-only picks (`narrRng` — C19). Fixed per-tick pipeline order (PLAN §6): resources → development → occupation → fleets → rivals → stars → winLose. Modules as of C8: `types`, `random`, `galaxy`, `simulation`, `movement`, `economy`, `fleets`, `combat`, `occupation`, `rivals`, `victory`. |
+| `src/state/` | Thin React binding (`useSyncExternalStore`): game state + non-saved view state (selection, dialog, dismissed battle). Persistence (autosave, export/import, validation) arrives in C35. |
+| `src/data/balance.ts` | **The only home for tunable numbers.** Documented, versioned. Current tables: `CAMPAIGN`, `GALAXY`, `MOVE`, `ECON`, `FLEET`, `COMBAT`, `OCC`, `RIVAL`. |
+| `src/data/` (rest) | All personality content: advisors + voice guides, dialogue pools, quirks, cultures, events, handbook, hints, tutorial scenario/steps (C19 onward). |
+| `src/components/` | React UI. Talks to the store, never the engine's mutators directly. Current: `GameScreen`, `GalaxyMap`, `StarSystem`, `PlanetPanel`, `EmpireBar`, `EventLog`, `TravelDialog`, `FleetPanel`, `BattleReport`, `VictoryDefeatScreen`. |
+| `src/audio/sfx.ts` | WebAudio synth SFX, mutable — planned (C32/C33). |
+| Map | SVG interactive layer; canvas nebula/particle background arrives with C31. |
+| `tests/` | Vitest: one file per engine subsystem, `campaign-sim.ts` (cruise profile, C8; engaged profile C12), `dialogue-variety` audit (C19+), tutorial auto-play, save round-trips, determinism replay. |
 
 ## Hard rules
 

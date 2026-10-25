@@ -10,8 +10,12 @@ Static client-side browser game for GitHub Pages.
 
 ## Status
 
-**Planning complete — implementation not started.** See
-`IMPLEMENTATION_STATUS.md` for live chunk status.
+**Phases A–B complete (C1–C8) — the conquest loop works.** In the browser you
+explore a seeded 20-system galaxy, travel, build, fight, conquer, and integrate
+worlds, and you can win the mandate (or lose it: wipe, no recovery, or year 120).
+A mostly-automatic "cruise" profile has won the 8-system test fixture headless
+(Tier-0 floor, PLAN P2). Next: C9 (specializations & development). Live status:
+`IMPLEMENTATION_STATUS.md`.
 
 ## Reading order
 
@@ -33,7 +37,7 @@ hint engine). The game is winnable at the "cruise" tier — travel, attack,
 wait — with optional, never-required depth on top. All balance numbers live in
 `src/data/balance.ts`. All simulation is deterministic and headless-testable.
 
-## Run (once Phase A / C1 lands)
+## Run
 
 ```bash
 npm install
@@ -42,6 +46,9 @@ npx vitest run     # simulation tests
 npx tsc --noEmit   # type check
 npm run build      # production build
 ```
+
+`python3 -m http.server` in `dist/` works for a quick static check, but the dev
+server is the right tool while developing.
 
 ## Deployment (planned, C36)
 
