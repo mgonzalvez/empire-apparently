@@ -214,8 +214,8 @@ const iso = (systems: System[], pool: Resources): GameState => {
     seed: SEED,
     systems,
     factions: [
-      { id: 'player', name: 'P', kind: 'player', color: '#fff' },
-      { id: 'rival-0', name: 'R', kind: 'rival', color: '#000' },
+      { id: 'player', name: 'P', kind: 'player', color: '#fff', fleet: 0 },
+      { id: 'rival-0', name: 'R', kind: 'rival', color: '#000', fleet: 0 },
     ],
     homeworldId: 'HOME-DUMMY',
     capitalIds: { player: systems[0].id },

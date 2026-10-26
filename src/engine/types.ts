@@ -90,6 +90,10 @@ export interface Faction {
   kind: FactionKind;
   /** UI color token (see data/names.ts FACTION_COLORS). */
   color: string;
+  /** Rival fleet strength (C11): abstract warships — offensive power for
+   *  rival attacks, and the counter-part for player support fleets (C13+).
+   *  0 for the player and independent factions. */
+  fleet: number;
 }
 
 export interface Galaxy {

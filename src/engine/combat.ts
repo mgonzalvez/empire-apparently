@@ -126,6 +126,16 @@ export function groundDefense(target: System): number {
 }
 
 /**
+ * Effective orbital defense (C11): the world's static defense PLUS its
+ * garrison. Used by the RIVAL attack gate and the UI threat readout — a
+ * garrisoned world is harder for a flotilla to take. (Player battles keep
+ * the C7 contract: garrison fights in the invasion phase.)
+ */
+export function defensiveStrength(target: System): number {
+  return target.defense + (target.planet?.garrison ?? 0);
+}
+
+/**
  * Resolve a battle against `targetId` (mutates the draft; called from
  * dispatchSim with the sim RNG threaded through). Returns the factual
  * report (stored on the state for the modal).

@@ -5,9 +5,11 @@
 
 import type { ReactNode } from 'react';
 import type { Fleet, GameState, Specialization, System } from '../engine/types';
-import { ECON, OCC } from '../data/balance';
+import { ECON, OCC, RIVAL } from '../data/balance';
 import { SPEC_LABEL, SPEC_NOTE, STAR_COLORS } from '../data/names';
 import { developmentCost, devRoman } from '../engine/economy';
+import { defensiveStrength } from '../engine/combat';
+import { gridNeighbors } from '../engine/galaxy';
 import {
   integrationEstimate,
   isGarrisoned,
@@ -70,6 +72,20 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
   }
 
   const p = system.planet;
+  const ownerFaction = game.galaxy.factions.find((f) => f.id === system.ownerId);
+  // C11 threat readout: a neighboring rival flotilla that has cleared the
+  // attack ratio can take this world next year. Factual, never a surprise.
+  const threatFaction =
+    system.ownerId === 'player'
+      ? gridNeighbors(game.galaxy.systems, system)
+          .map((t) => game.galaxy.factions.find((f) => f.id === t.ownerId))
+          .find(
+            (f) =>
+              f &&
+              f.kind === 'rival' &&
+              f.fleet >= RIVAL.attackRatio * defensiveStrength(system),
+          ) ?? null
+      : null;
   const shipText = fleet
     ? `${fleet.ships.interceptor} interceptor${fleet.ships.interceptor === 1 ? '' : 's'}, ${fleet.ships.cruiser} cruiser${fleet.ships.cruiser === 1 ? '' : 's'}, ${fleet.ships.transport} transport${fleet.ships.transport === 1 ? '' : 's'} — hull ${fleet.hull}%`
     : null;
@@ -94,6 +110,19 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
       {system.explored && (
         <>
           <Row label="Control" value={ownerName} />
+          {ownerFaction && ownerFaction.kind === 'rival' && ownerFaction.fleet > 0 && (
+            <Row
+              label="Rival flotilla"
+              value={`${ownerFaction.fleet} ships — attacks this world at 2× its defense`}
+            />
+          )}
+          {threatFaction && (
+            <Row
+              label="Threat"
+              value={`${threatFaction.name}'s flotilla can take this world (garrison it, or strike first)`}
+              warn
+            />
+          )}
           {p ? (
             <>
               <Row label="Planet" value={p.name} />
@@ -113,7 +142,10 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
                   value={`→ ${devRoman(p.development + 1)}: ${developmentCost(p.development)!.credits}c / ${developmentCost(p.development)!.materials}m per year, automatic`}
                 />
               )}
-              <Row label="Orbital defense" value={String(system.defense)} />
+              <Row
+                label="Orbital defense"
+                value={`${system.defense}${p.garrison > 0 ? ` (+${p.garrison} garrison)` : ''}`}
+              />
               {system.ownerId === 'player' ? (
                 <div className="spec-picker" role="group" aria-label="Specialization (free, instant)">
                   {SPECS.map((sp) => (

@@ -23,7 +23,7 @@ import type {
   StarClass,
   System,
 } from './types';
-import { GALAXY, type SupernovaFrequency } from '../data/balance';
+import { GALAXY, RIVAL, type SupernovaFrequency } from '../data/balance';
 import {
   FACTION_COLORS,
   HOMENAMES,
@@ -281,18 +281,20 @@ export function generateGalaxy(seed: number, opts: GalaxyOptions = {}): Galaxy {
 
   // ── 10. Factions ─────────────────────────────────────────────────────────
   const factions: Faction[] = [
-    { id: 'player', name: PLAYER_FACTION_NAME, kind: 'player', color: FACTION_COLORS.player },
+    { id: 'player', name: PLAYER_FACTION_NAME, kind: 'player', color: FACTION_COLORS.player, fleet: 0 },
     ...Array.from({ length: GALAXY.rivalCount }, (_, k) => ({
       id: `rival-${k}`,
       name: rivalNames[k],
       kind: 'rival' as const,
       color: FACTION_COLORS.rivals[k],
+      fleet: RIVAL.startingFleet, // fixed starting bonus (core §11)
     })),
     ...Array.from({ length: GALAXY.independentCount }, (_, k) => ({
       id: `ind-${k}`,
       name: independentNames[k],
       kind: 'independent' as const,
       color: FACTION_COLORS.independents[k],
+      fleet: 0,
     })),
   ];
 
@@ -489,10 +491,10 @@ export function createFixtureGalaxy(): Galaxy {
     homeworldId: 'S04',
     systems,
     factions: [
-      { id: 'player', name: PLAYER_FACTION_NAME, kind: 'player', color: FACTION_COLORS.player },
-      { id: 'rival-0', name: RIVAL_NAMES[2], kind: 'rival', color: FACTION_COLORS.rivals[0] },
-      { id: 'ind-0', name: INDEPENDENT_NAMES[0], kind: 'independent', color: FACTION_COLORS.independents[0] },
-      { id: 'ind-1', name: INDEPENDENT_NAMES[11], kind: 'independent', color: FACTION_COLORS.independents[1] },
+      { id: 'player', name: PLAYER_FACTION_NAME, kind: 'player', color: FACTION_COLORS.player, fleet: 0 },
+      { id: 'rival-0', name: RIVAL_NAMES[2], kind: 'rival', color: FACTION_COLORS.rivals[0], fleet: RIVAL.startingFleet },
+      { id: 'ind-0', name: INDEPENDENT_NAMES[0], kind: 'independent', color: FACTION_COLORS.independents[0], fleet: 0 },
+      { id: 'ind-1', name: INDEPENDENT_NAMES[11], kind: 'independent', color: FACTION_COLORS.independents[1], fleet: 0 },
     ],
     capitalIds: {
       player: 'S04',

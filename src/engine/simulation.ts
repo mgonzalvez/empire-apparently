@@ -122,8 +122,8 @@ const stageFns: Record<StageName, StageFn> = {
   occupation: (d) => applyOccupation(d),
   /** 4. Process fleet missions and arrivals. — C13/C14 support fleets. */
   fleets: (d) => resolveFleetMovement(d),
-  /** 5. Process rival faction decisions. — C11 formalizes the budget. */
-  rivals: (d) => applyRivals(d),
+  /** 5. Process rival faction decisions (C11: attack/expand/reinforce/build budget). */
+  rivals: (d, rng) => applyRivals(d, rng),
   /** 6. Advance stellar instability and events. — C15/C16, C29. */
   stars: () => {},
   /** 7. Evaluate victory and defeat. */

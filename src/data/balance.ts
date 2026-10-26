@@ -202,11 +202,19 @@ export const OCC = {
 export const RIVAL = {
   /** Expand into a neighbor when own defense ≥ ratio × target defense. */
   expandRatio: 1.5,
+  /** Attack a player world when fleet ≥ ratio × its effective defense
+   *  (orbital defense + garrison). At this ratio an attack always lands —
+   *  the threat is telegraphed, never a coin flip (core §11: no hidden cheating). */
+  attackRatio: 2.0,
   /** Otherwise reinforce the weakest owned system by this much per year. */
   reinforcePerYear: 1,
   /** Reinforce target = base + perDev × development. */
   defenseTargetBase: 4,
   defenseTargetPerDev: 2,
+  /** Fixed starting bonus (core §11): every rival starts with this fleet. */
+  startingFleet: 3,
+  /** The BUILD action: the rival fleet grows by this much per year. */
+  fleetBuildPerYear: 1,
 } as const;
 
 /**
