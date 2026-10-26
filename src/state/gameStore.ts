@@ -35,6 +35,7 @@ export type StoreAction =
   | { type: 'REARM' }
   | { type: 'SPECIALIZE'; systemId: string; specialization: Specialization }
   | { type: 'REINFORCE'; systemId: string }
+  | { type: 'COMMISSION' } // C13: support fleet at the shipyard (instant)
   | { type: 'DISMISS_BATTLE' }
   | { type: 'LOAD'; state: GameState }; // C35: schema validation with import
 
@@ -88,6 +89,7 @@ function reduce(s: StoreState, action: StoreAction): StoreState {
     case 'REARM':
     case 'SPECIALIZE':
     case 'REINFORCE':
+    case 'COMMISSION':
       if (!s.game) return s;
       return { ...s, game: dispatchSim(s.game, action) };
     case 'DISMISS_BATTLE':

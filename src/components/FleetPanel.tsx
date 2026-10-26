@@ -17,7 +17,10 @@ import {
   maxTroops,
   rearmCost,
   repairCost,
+  totalShips,
 } from '../engine/fleets';
+import { canCommission, STATE_LABEL, SUPPORT_COST } from '../engine/support';
+import { SUPPORT } from '../data/balance';
 import { dispatch } from '../state/gameStore';
 
 const SHIP_LABEL: Record<ShipClass, string> = {
@@ -43,6 +46,7 @@ export function FleetPanel({ game }: { game: GameState }) {
   const buildGate = (ship: ShipClass) => canBuild(game, ship);
   const repairGate = canRepair(game);
   const rearmGate = canRearm(game);
+  const commissionGate = canCommission(game);
 
   return (
     <section className="panel fleet-panel" aria-label="Flagship">
@@ -140,6 +144,48 @@ export function FleetPanel({ game }: { game: GameState }) {
           III+. Repair works anywhere.
         </p>
       )}
+
+      <div className="yard">
+        <p className="muted yard-title">
+          Support fleets ({game.supports.length}/{SUPPORT.maxFleets}) — autonomous, simple state machines.
+        </p>
+        {game.supports.map((sf) => {
+          const sys = game.galaxy.systems.find((s) => s.id === sf.systemId);
+          return (
+            <div className="row" key={sf.id}>
+              <span className="label">
+                {sf.name} — {STATE_LABEL[sf.supportState ?? 'idle']}
+              </span>
+              <span className={`value${sf.hull < SUPPORT.criticalHull ? ' warn' : ''}`}>
+                {sf.travel ? `en route to ${game.galaxy.systems.find((s) => s.id === sf.travel!.toId)?.name ?? '?'} (yr ${sf.travel.arriveTick})` : sys?.name ?? '?'} · {totalShips(sf)} ships · hull {sf.hull}%
+              </span>
+            </div>
+          );
+        })}
+        {game.supports.length === 0 && (
+          <p className="muted">None yet. Unassigned fleets patrol home — no decisions required.</p>
+        )}
+        {yard && game.supports.length < SUPPORT.maxFleets && (
+          <button
+            type="button"
+            className="yard-btn"
+            disabled={!commissionGate.ok || game.status !== 'active'}
+            title={commissionGate.ok ? undefined : commissionGate.reason ?? undefined}
+            onClick={() => dispatch({ type: 'COMMISSION' })}
+          >
+            <span>
+              Commission support fleet — {SUPPORT_COST.credits}C / {SUPPORT_COST.materials}M
+            </span>
+            <span className="yard-after">2 interceptors + 1 transport, real ships</span>
+          </button>
+        )}
+        {yard && game.supports.length >= SUPPORT.maxFleets && (
+          <p className="muted">Fleet cap reached ({SUPPORT.maxFleets}).</p>
+        )}
+        {!yard && game.supports.length < SUPPORT.maxFleets && (
+          <p className="muted">Support fleets are commissioned at a shipyard.</p>
+        )}
+      </div>
     </section>
   );
 }

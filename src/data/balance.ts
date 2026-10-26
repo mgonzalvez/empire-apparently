@@ -233,7 +233,19 @@ export const RIVAL = {
 } as const;
 
 /**
- * Automatic development (C9; core §9 "Planet development"): levels advance
+ * Support fleets (C13; core §7 "up to three" autonomous support fleets).
+ * Initial values — tuned in C34.
+ */
+export const SUPPORT = {
+  /** Hard cap (core §7). */
+  maxFleets: 3,
+  /** Commissioned composition — a modest escort of REAL ships (never free). */
+  startingShips: { interceptor: 2, cruiser: 0, transport: 1 },
+  /** Below this hull the fleet heads for home (Returning). */
+  criticalHull: 25,
+} as const;
+
+/** Automatic development (C9; core §9 "Planet development"): levels advance
  * on their own each year, capped, with a transparent cost paid from the
  * global pools. The development stage (core §4 step 2) runs AFTER income,
  * so a world can develop on that year's production. Initial values —

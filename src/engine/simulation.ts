@@ -19,6 +19,7 @@ import { buildCost, canBuild, canRearm, canRepair, clampTroops, combatStrength, 
 import { canAttack, resolveBattle } from './combat';
 import { applyOccupation } from './occupation';
 import { applyRivals } from './rivals';
+import { applySupportFleets, commission } from './support';
 import { evaluateWinLose } from './victory';
 import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
 import type { GameState, ShipClass, Specialization, Stance } from './types';
@@ -120,8 +121,11 @@ const stageFns: Record<StageName, StageFn> = {
   development: (d) => applyDevelopment(d),
   /** 3. Advance occupation stability. */
   occupation: (d) => applyOccupation(d),
-  /** 4. Process fleet missions and arrivals. — C13/C14 support fleets. */
-  fleets: (d) => resolveFleetMovement(d),
+  /** 4. Process fleet missions and arrivals. — C13 support fleets. */
+  fleets: (d) => {
+    resolveFleetMovement(d);
+    applySupportFleets(d);
+  },
   /** 5. Process rival faction decisions (C11: attack/expand/reinforce/build budget). */
   rivals: (d, rng) => applyRivals(d, rng),
   /** 6. Advance stellar instability and events. — C15/C16, C29. */
@@ -176,7 +180,8 @@ export type SimAction =
   | { type: 'BUILD'; ship: ShipClass } // instant, 0 ticks
   | { type: 'REARM' } // instant, 0 ticks
   | { type: 'SPECIALIZE'; systemId: string; specialization: Specialization } // instant, 0 ticks (C9)
-  | { type: 'REINFORCE'; systemId: string }; // instant, 0 ticks (C10)
+  | { type: 'REINFORCE'; systemId: string } // instant, 0 ticks (C10)
+  | { type: 'COMMISSION' }; // instant, 0 ticks — support fleet at the shipyard (C13)
 
 /**
  * The ONLY actions that advance time (core §4: travel, waiting, repair,
@@ -215,6 +220,8 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
       return specialize(state, action.systemId, action.specialization);
     case 'REINFORCE':
       return reinforce(state, action.systemId);
+    case 'COMMISSION':
+      return commission(state);
     default:
       // Unknown/unlisted actions never change anything (core §4).
       return state;

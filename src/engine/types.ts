@@ -117,6 +117,20 @@ export interface FleetShips {
 /** Flagship orders (core §6 "current orders"); C4/C7/C11 wire each one. */
 export type FleetOrderType = 'hold' | 'travel' | 'attack' | 'reinforce';
 
+/**
+ * Support fleet states (core §7: "simple state machines, NOT autonomous
+ * agents"). C13 drives Idle/Traveling/Patrolling/Returning; C14 adds the
+ * mission states (Scouting/Reinforcing/Defending) and Patrol intercepts.
+ */
+export type SupportState =
+  | 'idle'
+  | 'traveling'
+  | 'scouting'
+  | 'patrolling'
+  | 'reinforcing'
+  | 'defending'
+  | 'returning';
+
 export interface Fleet {
   id: string;
   name: string;
@@ -139,6 +153,10 @@ export interface Fleet {
     departTick: number;
     arriveTick: number;
   };
+  /** Support-fleet home system (C13) — undefined for the flagship. */
+  homeId?: string;
+  /** Support-fleet state machine (C13) — undefined for the flagship. */
+  supportState?: SupportState;
 }
 
 // ── Log & campaign state ────────────────────────────────────────────────

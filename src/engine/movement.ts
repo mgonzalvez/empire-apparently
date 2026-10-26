@@ -31,6 +31,71 @@ export function bandForDistance(dist: number): MoveBand | null {
   return null;
 }
 
+/**
+ * Generic voyage quote for ANY fleet (C13): same bands, same fuel rule
+ * (ships × band rate), same max jump range as the flagship. One source of
+ * truth for range/fuel — support fleets inherit the flagship's rules.
+ */
+export interface VoyageQuote {
+  ok: boolean;
+  reason: string | null;
+  distance: number;
+  bandName: string | null;
+  years: number | null;
+  fuelCost: number;
+}
+
+export function quoteVoyage(
+  systems: { id: string; x: number; y: number }[],
+  fromId: string,
+  toId: string,
+  shipCount: number,
+  fuelAvailable: number,
+): VoyageQuote {
+  const base: Omit<VoyageQuote, 'ok' | 'reason'> = {
+    distance: 0,
+    bandName: null,
+    years: null,
+    fuelCost: 0,
+  };
+  const from = systems.find((s) => s.id === fromId);
+  const dest = systems.find((s) => s.id === toId);
+  if (!from || !dest) return { ...base, ok: false, reason: 'Unknown system.' };
+  if (toId === fromId) return { ...base, ok: false, reason: 'Already at the destination.' };
+
+  const dist = distance(from, dest);
+  const band = bandForDistance(dist);
+  if (band === null) {
+    return {
+      ...base,
+      distance: dist,
+      ok: false,
+      reason: `Out of range: ${dist} units — max jump ${MAX_JUMP_RANGE}. Travel in stages.`,
+    };
+  }
+  const fuelCost = shipCount * band.fuelPerShip;
+  if (fuelAvailable < fuelCost) {
+    return {
+      ...base,
+      distance: dist,
+      bandName: band.name,
+      years: band.years,
+      fuelCost,
+      ok: false,
+      reason: `Insufficient fuel: the voyage costs ${fuelCost}, the tank holds ${Math.floor(fuelAvailable)}.`,
+    };
+  }
+  return {
+    ...base,
+    distance: dist,
+    bandName: band.name,
+    years: band.years,
+    fuelCost,
+    ok: true,
+    reason: null,
+  };
+}
+
 export interface TravelQuote {
   ok: boolean;
   /** Human-readable rejection reason (UI shows it; dispatch also guards). */

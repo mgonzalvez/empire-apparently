@@ -34,18 +34,18 @@ export function GameScreen() {
   const ownerName = (s: System): string =>
     s.ownerId ? (factionById.get(s.ownerId)?.name ?? 'Unknown') : 'Unclaimed';
 
-  // Ships docked in each system. An in-transit flagship is "between"
-  // systems — it renders as the moving marker, not a badge.
+  // Ships docked in each system. An in-transit fleet is "between"
+  // systems — it renders as a moving marker, not a badge.
   const inTransit = game.flagship.travel !== null;
   const shipsBySystem = new Map<string, number>();
   for (const f of [game.flagship, ...game.supports]) {
-    if (f === game.flagship && inTransit) continue;
+    if (f.travel !== null) continue;
     shipsBySystem.set(f.systemId, (shipsBySystem.get(f.systemId) ?? 0) + totalShips(f));
   }
   const fleetAt = (id: string): Fleet | null =>
     game.flagship.systemId === id && !inTransit
       ? game.flagship
-      : game.supports.find((f) => f.systemId === id) ?? null;
+      : game.supports.find((f) => f.systemId === id && f.travel === null) ?? null;
 
   let moving: null | { x: number; y: number; from: System; to: System } = null;
   if (game.flagship.travel) {
