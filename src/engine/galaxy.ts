@@ -254,6 +254,7 @@ export function generateGalaxy(seed: number, opts: GalaxyOptions = {}): Galaxy {
       destroyed: false,
       instability: 0,
       supernovaCandidate: false,
+      instabilityRate: 0,
     };
   });
 
@@ -270,10 +271,14 @@ export function generateGalaxy(seed: number, opts: GalaxyOptions = {}): Galaxy {
     );
   const candidates = new Set(rng.shuffled(candidatePool).slice(0, candidateCount));
   for (const i of systems.map((_, i) => i)) {
-    systems[i].instability = candidates.has(i)
+    const isC = candidates.has(i);
+    systems[i].instability = isC
       ? rng.intRange(sup.candidateStartInstability[0], sup.candidateStartInstability[1] + 1)
       : rng.intRange(sup.nonCandidateInstability[0], sup.nonCandidateInstability[1] + 1);
-    systems[i].supernovaCandidate = candidates.has(i);
+    systems[i].instabilityRate = isC
+      ? rng.intRange(sup.candidateRate[0], sup.candidateRate[1] + 1)
+      : 0;
+    systems[i].supernovaCandidate = isC;
   }
 
   // ── 9. Fairness repair: ≥ 2 viable early targets next to the homeworld ───
@@ -449,6 +454,7 @@ export function createFixtureGalaxy(): Galaxy {
     destroyed: false,
     instability: 0,
     supernovaCandidate: false,
+    instabilityRate: 0,
     ...extra,
   });
 
@@ -479,7 +485,7 @@ export function createFixtureGalaxy(): Galaxy {
         null,
         3,
         1,
-        { supernovaCandidate: true, instability: 55 },
+        { supernovaCandidate: true, instability: 55, instabilityRate: 5 },
       ),
   ];
   // The homeworld is the player's from the start — fully integrated (newGame).

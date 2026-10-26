@@ -6,6 +6,7 @@
 
 import type { System } from '../engine/types';
 import { SPEC_BADGE, STAR_COLORS } from '../data/names';
+import { supernovaState } from '../engine/supernova';
 
 export interface StarSystemProps {
   system: System;
@@ -73,9 +74,14 @@ export function StarSystem({
               </text>
             </g>
           )}
-          {s.supernovaCandidate && !s.destroyed && (
-            <text y={-4.4} textAnchor="middle" fontSize={3.4} fill="var(--warn)">
-              ✳
+          {!s.destroyed && (
+            <text
+              y={-4.4}
+              textAnchor="middle"
+              fontSize={supernovaState(s) === 'critical' || supernovaState(s) === 'supernova' ? 4.2 : 3.4}
+              fill="var(--warn)"
+            >
+              {supernovaState(s) === 'critical' || supernovaState(s) === 'supernova' ? '✸' : s.supernovaCandidate ? '✳' : ''}
             </text>
           )}
           <text y={7.6} textAnchor="middle" fontSize={2.9} fill="var(--ink-muted)">

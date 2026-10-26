@@ -20,6 +20,7 @@ import { canAttack, resolveBattle } from './combat';
 import { applyOccupation } from './occupation';
 import { applyRivals } from './rivals';
 import { applySupportFleets, assignMission, commission } from './support';
+import { applySupernovas } from './supernova';
 import { evaluateWinLose } from './victory';
 import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
 import type { GameState, ShipClass, Specialization, Stance, SupportMission } from './types';
@@ -129,7 +130,7 @@ const stageFns: Record<StageName, StageFn> = {
   /** 5. Process rival faction decisions (C11: attack/expand/reinforce/build budget). */
   rivals: (d, rng) => applyRivals(d, rng),
   /** 6. Advance stellar instability and events. — C15/C16, C29. */
-  stars: () => {},
+  stars: (d) => applySupernovas(d),
   /** 7. Evaluate victory and defeat. */
   winLose: (d) => evaluateWinLose(d),
 };

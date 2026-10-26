@@ -80,6 +80,8 @@ export interface System {
   instability: number;
   /** Seeded at new game; never the homeworld (fairness). */
   supernovaCandidate: boolean;
+  /** Per-year instability increment (>0 only for candidates; C15). */
+  instabilityRate: number;
 }
 
 export type FactionKind = 'player' | 'rival' | 'independent';

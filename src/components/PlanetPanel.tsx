@@ -10,6 +10,7 @@ import { SPEC_LABEL, SPEC_NOTE, STAR_COLORS } from '../data/names';
 import { developmentCost, devRoman } from '../engine/economy';
 import { defensiveStrength } from '../engine/combat';
 import { gridNeighbors } from '../engine/galaxy';
+import { criticalWindow, isLocallyScouted, supernovaState } from '../engine/supernova';
 import {
   integrationEstimate,
   isGarrisoned,
@@ -123,6 +124,27 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
               warn
             />
           )}
+          {(() => {
+            const st = supernovaState(system);
+            if (st === 'stable' || st === 'destroyed') return null;
+            if (st === 'critical' || st === 'supernova') {
+              const [lo, hi] = criticalWindow(system, isLocallyScouted(game, system.id));
+              return (
+                <Row
+                  label="Stellar stability"
+                  value={
+                    st === 'supernova'
+                      ? 'SUPERNOVA — the star is about to go'
+                      : `CRITICAL — should go within ${lo}–${hi} years`
+                  }
+                  warn
+                />
+              );
+            }
+            return (
+              <Row label="Stellar stability" value="Anomalous — under observation" warn />
+            );
+          })()}
           {p ? (
             <>
               <Row label="Planet" value={p.name} />

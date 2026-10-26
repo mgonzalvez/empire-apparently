@@ -1,0 +1,169 @@
+import { describe, expect, it } from 'vitest';
+import { createFixtureGalaxy, generateGalaxy } from '../src/engine/galaxy';
+import { newGame, runYears } from '../src/engine/simulation';
+import { criticalWindow, supernovaState } from '../src/engine/supernova';
+import { evaluateWinLose } from '../src/engine/victory';
+import type { GameState } from '../src/engine/types';
+
+/**
+ * C15 acceptance:
+ *  - timing deterministic (tested)
+ *  - warnings precede detonation by ≥ the shown window minus 1 year
+ *    (window always a range, no false precision)
+ *  - homeworld never a candidate (tested)
+ *  - victory still achievable with destroyed systems excluded (tested)
+ */
+
+function fixtureState(): GameState {
+  const s = newGame(4242);
+  // Deterministic 8-system fixture: S07 is the supernova candidate (55 / rate 5).
+  s.galaxy = createFixtureGalaxy();
+  s.flagship.systemId = s.galaxy.homeworldId;
+  s.flagship.travel = null;
+  return s;
+}
+
+describe('C15 seeding', () => {
+  it('is deterministic: same seed → same candidates, rates, and trajectories', () => {
+    const a = generateGalaxy(777);
+    const b = generateGalaxy(777);
+    const pick = (g: typeof a) =>
+      g.systems.map((s) => [s.id, s.supernovaCandidate, s.instabilityRate, s.instability]);
+    expect(pick(a)).toEqual(pick(b));
+
+    // Whole-tick determinism through the stars stage.
+    const mk = () => {
+      const s = newGame(999);
+      s.flagship.systemId = s.galaxy.homeworldId;
+      s.flagship.travel = null;
+      return s;
+    };
+    const seq = (s: GameState) => {
+      const out: number[][] = [];
+      for (let i = 0; i < 40; i++) {
+        s = runYears(s, 1);
+        out.push(s.galaxy.systems.map((x) => x.instability));
+      }
+      return out;
+    };
+    expect(seq(mk())).toEqual(seq(mk()));
+  });
+
+  it('respects the frequency table (zero/low/normal = 0 / 2–3 / 3–5)', () => {
+    const counts = (seed: number, freq: 'zero' | 'low' | 'normal') =>
+      generateGalaxy(seed, { supernovaFrequency: freq }).systems.filter(
+        (s) => s.supernovaCandidate,
+      ).length;
+    expect(counts(5, 'zero')).toBe(0);
+    const low = counts(5, 'low');
+    expect(low).toBeGreaterThanOrEqual(2);
+    expect(low).toBeLessThanOrEqual(3);
+    const normal = counts(5, 'normal');
+    expect(normal).toBeGreaterThanOrEqual(3);
+    expect(normal).toBeLessThanOrEqual(5);
+  });
+
+  it('the homeworld is never a candidate (across seeds and frequencies)', () => {
+    for (const seed of [1, 2, 3, 42, 4242, 987654]) {
+      for (const freq of ['zero', 'low', 'normal'] as const) {
+        const g = generateGalaxy(seed, { supernovaFrequency: freq });
+        const home = g.systems.find((s) => s.id === g.homeworldId)!;
+        expect(home.supernovaCandidate).toBe(false);
+        expect(home.instabilityRate).toBe(0);
+      }
+    }
+  });
+});
+
+describe('C15 pipeline', () => {
+  it('advances only candidates, transitions state, and logs each warning', () => {
+    let s = fixtureState();
+    // Fixture: S07 is a candidate (instability 55, rate 5); S04 is not.
+    const s07 = () => s.galaxy.systems.find((x) => x.id === 'S07')!;
+    const s04 = () => s.galaxy.systems.find((x) => x.id === 'S04')!;
+    expect(s07().supernovaCandidate).toBe(true);
+    expect(s07().instability).toBe(55);
+
+    s = runYears(s, 1); // 55 → 60, still anomalous
+    expect(s07().instability).toBe(60);
+    expect(s04().instability).toBe(0); // non-candidates never move
+
+    s = runYears(s, 3); // 60 → 75 = CRITICAL (tick 4)
+    expect(s07().instability).toBe(75);
+    expect(supernovaState(s07())).toBe('critical');
+    expect(
+      s.log.some((l) => l.kind === 'warning' && l.text.includes('CRITICAL')),
+    ).toBe(true);
+  });
+
+  it('logs the anomalous alert when a stable star crosses 50', () => {
+    let s = fixtureState();
+    // White-box a fresh candidate that starts stable.
+    const s01 = s.galaxy.systems.find((x) => x.id === 'S01')!;
+    s01.supernovaCandidate = true;
+    s01.instability = 48;
+    s01.instabilityRate = 5;
+    s = runYears(s, 1); // 48 → 53 = anomalous
+    const fresh01 = s.galaxy.systems.find((x) => x.id === 'S01')!; // new state — re-fetch
+    expect(supernovaState(fresh01)).toBe('anomalous');
+    expect(
+      s.log.some((l) => l.kind === 'event' && l.text.includes('anomalies')),
+    ).toBe(true);
+  });
+
+  it('the window is a range, and the warning precedes detonation by ≥ window−1', () => {
+    let s = fixtureState();
+    const s07 = () => s.galaxy.systems.find((x) => x.id === 'S07')!;
+    // Advance to the critical tick.
+    while (supernovaState(s07()) !== 'critical') s = runYears(s, 1);
+    const critTick = s.tick;
+    const [lo, hi] = criticalWindow(s07(), false);
+    expect(lo).toBeLessThanOrEqual(hi); // a range, not a point
+    expect(hi).toBeLessThanOrEqual(6); // no false precision past the band
+    // Run to detonation.
+    while (s07().instability < 100) s = runYears(s, 1);
+    const detTick = s.tick;
+    expect(detTick - critTick).toBeGreaterThanOrEqual(hi - 1);
+    expect(supernovaState(s07())).toBe('supernova');
+  });
+
+  it('scouting (local presence) narrows the window from below', () => {
+    let s = fixtureState();
+    const s07 = () => s.galaxy.systems.find((x) => x.id === 'S07')!;
+    while (supernovaState(s07()) !== 'critical') s = runYears(s, 1);
+    const wide = criticalWindow(s07(), false);
+    // Dock the flagship at S07 → scouted.
+    s.flagship.systemId = 'S07';
+    s.flagship.travel = null;
+    const narrow = criticalWindow(s07(), true);
+    expect(narrow[0]).toBeGreaterThanOrEqual(wide[0]);
+    expect(narrow[1]).toBeLessThanOrEqual(wide[1]);
+    expect(narrow[1] - narrow[0]).toBeLessThanOrEqual(wide[1] - wide[0]);
+  });
+});
+
+describe('C15 victory exclusion', () => {
+  it('a destroyed (rival) system is excluded from conquest-victory', () => {
+    const mk = (destroyed: boolean) => {
+      const s = fixtureState();
+      for (const t of s.galaxy.systems) {
+        t.ownerId = 'player';
+        t.occupation = 'integrated';
+        if (t.planet) {
+          t.planet.integration = 100;
+          t.planet.stability = 100;
+        }
+      }
+      // S05: a rival world that is (or is not) destroyed.
+      const s05 = s.galaxy.systems.find((x) => x.id === 'S05')!;
+      s05.ownerId = 'rival-0';
+      s05.destroyed = destroyed;
+      evaluateWinLose(s);
+      return s.status;
+    };
+    // Intact rival world blocks victory…
+    expect(mk(false)).toBe('active');
+    // …but the same world, destroyed, is excluded → victory is achievable.
+    expect(mk(true)).toBe('victory');
+  });
+});

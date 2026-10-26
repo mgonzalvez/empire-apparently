@@ -89,6 +89,12 @@ export const GALAXY = {
     /** Starting instability for candidates (non-candidates: 0..35). */
     candidateStartInstability: [45, 65] as const,
     nonCandidateInstability: [0, 35] as const,
+    /**
+     * Per-year instability increment for candidates (C15). Capped at 5 so
+     * the critical warning always precedes detonation by ≥ 5 years (the
+     * shown window's max is 6 — no false precision, core §10).
+     */
+    candidateRate: [3, 5] as const,
     /** No candidates in the opening zone (fairness, core §3/§10). */
     minGridDistanceFromPlayer: 2,
     /** Stability thresholds (core §10 states, our numbers). */
