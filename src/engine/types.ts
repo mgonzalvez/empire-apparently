@@ -131,6 +131,15 @@ export type SupportState =
   | 'defending'
   | 'returning';
 
+/** Support-fleet missions (C14; core §7) — the fixed inventory of four. */
+export type SupportMission = 'scout' | 'patrol' | 'reinforce' | 'defend';
+
+/** An assigned mission: the machine executes it, the player never pilots. */
+export interface SupportFleetMission {
+  type: SupportMission;
+  targetId: string;
+}
+
 export interface Fleet {
   id: string;
   name: string;
@@ -157,6 +166,8 @@ export interface Fleet {
   homeId?: string;
   /** Support-fleet state machine (C13) — undefined for the flagship. */
   supportState?: SupportState;
+  /** Assigned mission (C14) — null = unassigned (patrols home). */
+  mission?: SupportFleetMission | null;
 }
 
 // ── Log & campaign state ────────────────────────────────────────────────

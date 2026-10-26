@@ -83,7 +83,7 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
             (f) =>
               f &&
               f.kind === 'rival' &&
-              f.fleet >= RIVAL.attackRatio * defensiveStrength(system),
+              f.fleet >= RIVAL.attackRatio * defensiveStrength(system, game),
           ) ?? null
       : null;
   const shipText = fleet

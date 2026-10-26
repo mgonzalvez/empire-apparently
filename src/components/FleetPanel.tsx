@@ -5,7 +5,7 @@
  * immediately. No queue management: builds are instant, repair is one year.
  */
 
-import type { GameState, ShipClass } from '../engine/types';
+import type { GameState, ShipClass, SupportMission } from '../engine/types';
 import {
   buildCost,
   canBuild,
@@ -19,7 +19,7 @@ import {
   repairCost,
   totalShips,
 } from '../engine/fleets';
-import { canCommission, STATE_LABEL, SUPPORT_COST } from '../engine/support';
+import { STATE_LABEL, SUPPORT_COST, canAssignMission, canCommission, reinforceBoardingCost } from '../engine/support';
 import { SUPPORT } from '../data/balance';
 import { dispatch } from '../state/gameStore';
 
@@ -36,6 +36,45 @@ function strengthAfterBuild(game: GameState, ship: ShipClass): number {
     ships: { ...game.flagship.ships, [ship]: game.flagship.ships[ship] + 1 },
   };
   return combatStrength(preview);
+}
+
+interface MissionOption {
+  value: string;
+  label: string;
+}
+
+/**
+ * Assignable (mission, target) pairs for a fleet, in a stable order. Each
+ * is gated by the SAME canAssignMission the engine uses — a control is only
+ * offered when it works (core §19, no fake controls).
+ */
+function missionOptions(game: GameState, fleetId: string): MissionOption[] {
+  if (!game.supports.some((f) => f.id === fleetId)) return [];
+  const out: MissionOption[] = [];
+  for (const s of game.galaxy.systems) {
+    if (s.destroyed) continue;
+    if (!s.explored) {
+      const g = canAssignMission(game, fleetId, 'scout', s.id);
+      if (g.ok) out.push({ value: `scout:${s.id}`, label: `Scout — ${s.name}` });
+    }
+    if (s.ownerId === 'player' && s.planet) {
+      const patrol = canAssignMission(game, fleetId, 'patrol', s.id);
+      if (patrol.ok) out.push({ value: `patrol:${s.id}`, label: `Patrol — ${s.name}` });
+      const defend = canAssignMission(game, fleetId, 'defend', s.id);
+      if (defend.ok) out.push({ value: `defend:${s.id}`, label: `Defend — ${s.name}` });
+      if (s.occupation === 'occupied') {
+        const reinforce = canAssignMission(game, fleetId, 'reinforce', s.id);
+        if (reinforce.ok) {
+          const cost = reinforceBoardingCost(game.supports.find((f) => f.id === fleetId)!);
+          out.push({
+            value: `reinforce:${s.id}`,
+            label: `Reinforce — ${s.name}${cost > 0 ? ` (${cost}C)` : ''}`,
+          });
+        }
+      }
+    }
+  }
+  return out;
 }
 
 export function FleetPanel({ game }: { game: GameState }) {
@@ -151,14 +190,36 @@ export function FleetPanel({ game }: { game: GameState }) {
         </p>
         {game.supports.map((sf) => {
           const sys = game.galaxy.systems.find((s) => s.id === sf.systemId);
+          const opts = missionOptions(game, sf.id);
           return (
-            <div className="row" key={sf.id}>
+            <div className="row fleet-row" key={sf.id}>
               <span className="label">
                 {sf.name} — {STATE_LABEL[sf.supportState ?? 'idle']}
               </span>
               <span className={`value${sf.hull < SUPPORT.criticalHull ? ' warn' : ''}`}>
                 {sf.travel ? `en route to ${game.galaxy.systems.find((s) => s.id === sf.travel!.toId)?.name ?? '?'} (yr ${sf.travel.arriveTick})` : sys?.name ?? '?'} · {totalShips(sf)} ships · hull {sf.hull}%
               </span>
+              <select
+                className="mission-select"
+                aria-label={`Mission for ${sf.name}`}
+                value={sf.mission ? `${sf.mission.type}:${sf.mission.targetId}` : ''}
+                disabled={game.status !== 'active'}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  if (v === '') dispatch({ type: 'ASSIGN_MISSION', fleetId: sf.id, mission: null, targetId: null });
+                  else {
+                    const [mission, targetId] = v.split(':');
+                    dispatch({ type: 'ASSIGN_MISSION', fleetId: sf.id, mission: mission as SupportMission, targetId });
+                  }
+                }}
+              >
+                <option value="">— patrol home —</option>
+                {opts.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
             </div>
           );
         })}

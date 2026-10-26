@@ -20,7 +20,7 @@
  * hook C13+ uses when player support fleets engage it.
  */
 
-import { RIVAL } from '../data/balance';
+import { RIVAL, SUPPORT } from '../data/balance';
 import { defensiveStrength } from './combat';
 import { gridNeighbors } from './galaxy';
 import { Rng } from './random';
@@ -40,7 +40,7 @@ const defenseTarget = (s: System): number =>
 function rivalAttack(d: GameState, attacker: string, target: System, rng: Rng): number {
   const r = d.galaxy.factions.find((f) => f.id === attacker)!;
   const A = r.fleet;
-  const D = Math.max(1, defensiveStrength(target));
+  const D = Math.max(1, defensiveStrength(target, d));
   const varA = varianceDraw(rng); // draw order matters (determinism)
   const varD = varianceDraw(rng);
   const Ae = A * varA;
@@ -66,6 +66,20 @@ function rivalAttack(d: GameState, attacker: string, target: System, rng: Rng): 
     kind: 'warning',
     text: `${r.name} takes ${target.name} — flotilla ${A} against defense ${D}.`,
   });
+
+  // C14: a support fleet defending this world breaks off the defense and
+  // takes hull damage (it never invades, and it will limp home next year).
+  for (const sf of d.supports) {
+    if (sf.systemId === target.id && sf.supportState === 'defending') {
+      sf.hull = Math.max(0, sf.hull - SUPPORT.defendHullDamage);
+      sf.mission = null; // its world is gone — the order is void
+      d.log.push({
+        tick: d.tick,
+        kind: 'warning',
+        text: `${sf.name} breaks off the defense of ${target.name} (hull ${sf.hull}%).`,
+      });
+    }
+  }
   return r.fleet;
 }
 
@@ -86,12 +100,12 @@ export function applyRivals(d: GameState, rng: Rng): void {
       for (const s of owned) {
         for (const t of gridNeighbors(systems, s)) {
           if (t.ownerId !== 'player' || t.planet === null || t.destroyed) continue;
-          if (r.fleet < RIVAL.attackRatio * defensiveStrength(t)) continue;
+          if (r.fleet < RIVAL.attackRatio * defensiveStrength(t, d)) continue;
           if (
             pick === null ||
             t.planet.development > pick.planet!.development ||
             (t.planet.development === pick.planet!.development &&
-              defensiveStrength(t) < defensiveStrength(pick))
+              defensiveStrength(t, d) < defensiveStrength(pick, d))
           ) {
             pick = t;
           }

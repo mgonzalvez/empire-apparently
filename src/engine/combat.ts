@@ -31,6 +31,7 @@ import {
   invasionStrength,
 } from './fleets';
 import { recommendedGarrison } from './occupation';
+import { defendingStrengthAt } from './support';
 import type { BattleReport, FleetShips, GameState, ShipClass, Stance, System } from './types';
 
 export type { Stance };
@@ -126,13 +127,20 @@ export function groundDefense(target: System): number {
 }
 
 /**
- * Effective orbital defense (C11): the world's static defense PLUS its
- * garrison. Used by the RIVAL attack gate and the UI threat readout — a
- * garrisoned world is harder for a flotilla to take. (Player battles keep
- * the C7 contract: garrison fights in the invasion phase.)
+ * Effective orbital defense (C11, extended C14): the world's static defense
+ * PLUS its garrison PLUS the combat strength of any support fleet
+ * stationed there in the Defending state (C14) — the same derived strength
+ * a player fleet would bring. Used by the RIVAL attack gate and the UI
+ * threat readout. (Player battles keep the C7 contract: garrison fights in
+ * the invasion phase; the `state` argument is only needed for the C14
+ * support term — pass undefined for a garrison-only reading.)
  */
-export function defensiveStrength(target: System): number {
-  return target.defense + (target.planet?.garrison ?? 0);
+export function defensiveStrength(target: System, state?: GameState): number {
+  return (
+    target.defense +
+    (target.planet?.garrison ?? 0) +
+    (state ? defendingStrengthAt(state, target.id) : 0)
+  );
 }
 
 /**

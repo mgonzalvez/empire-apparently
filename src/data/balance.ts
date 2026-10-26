@@ -243,6 +243,15 @@ export const SUPPORT = {
   startingShips: { interceptor: 2, cruiser: 0, transport: 1 },
   /** Below this hull the fleet heads for home (Returning). */
   criticalHull: 25,
+  /**
+   * Patrol (C14): rival flotillas of this size or smaller, grid-adjacent to
+   * the patrolled world, are intercepted (weakened) once per year.
+   */
+  weakFleetSize: 2,
+  /** Ships destroyed per patrol intercept. */
+  interceptLoss: 1,
+  /** Hull damage a defending fleet takes when its world falls (C14). */
+  defendHullDamage: 50,
 } as const;
 
 /** Automatic development (C9; core §9 "Planet development"): levels advance

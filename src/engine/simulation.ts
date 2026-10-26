@@ -19,10 +19,10 @@ import { buildCost, canBuild, canRearm, canRepair, clampTroops, combatStrength, 
 import { canAttack, resolveBattle } from './combat';
 import { applyOccupation } from './occupation';
 import { applyRivals } from './rivals';
-import { applySupportFleets, commission } from './support';
+import { applySupportFleets, assignMission, commission } from './support';
 import { evaluateWinLose } from './victory';
 import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
-import type { GameState, ShipClass, Specialization, Stance } from './types';
+import type { GameState, ShipClass, Specialization, Stance, SupportMission } from './types';
 
 // ── New game ─────────────────────────────────────────────────────────────
 
@@ -181,7 +181,13 @@ export type SimAction =
   | { type: 'REARM' } // instant, 0 ticks
   | { type: 'SPECIALIZE'; systemId: string; specialization: Specialization } // instant, 0 ticks (C9)
   | { type: 'REINFORCE'; systemId: string } // instant, 0 ticks (C10)
-  | { type: 'COMMISSION' }; // instant, 0 ticks — support fleet at the shipyard (C13)
+  | { type: 'COMMISSION' } // instant, 0 ticks — support fleet at the shipyard (C13)
+  | {
+      type: 'ASSIGN_MISSION';
+      fleetId: string;
+      mission: SupportMission | null; // null = stand down (return home)
+      targetId: string | null;
+    }; // instant, 0 ticks — the machine executes (C14)
 
 /**
  * The ONLY actions that advance time (core §4: travel, waiting, repair,
@@ -222,6 +228,8 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
       return reinforce(state, action.systemId);
     case 'COMMISSION':
       return commission(state);
+    case 'ASSIGN_MISSION':
+      return assignMission(state, action.fleetId, action.mission, action.targetId);
     default:
       // Unknown/unlisted actions never change anything (core §4).
       return state;
