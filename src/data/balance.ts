@@ -180,19 +180,22 @@ export const COMBAT = {
   developmentPerLevel: 1,
   /** Hull degrades by this × the ship-loss fraction (0.5 = half). */
   hullDamageFactor: 0.5,
-  /** On capture, this fraction of surviving troops garrisons the world (C8 refines). */
-  garrisonFraction: 0.5,
 } as const;
 
-/** Occupation (C8; core §9, PLAN §8). Initial values — tuned in C12/C34. */
+/** Occupation (C8, extended C10; core §9, PLAN §8). Initial values — tuned in C12/C34. */
 export const OCC = {
-  /** Recommended garrison = development (C10 adds the threat nuance). */
+  /** Recommended garrison = development × this … */
   garrisonPerDevelopment: 1,
+  /** … + this when a rival faction is grid-adjacent (C10 threat nuance). */
+  rivalThreatBonus: 1,
   /** Stability moves per year while occupied. */
   stabilityRisePerYear: 10,
   stabilityFallPerYear: 20,
   /** Integration gains = stability/100 × this, per year (rate ∝ stability). */
   integrationRatePerYear: 50,
+  /** Tier-0 fallback (C10): below this stability, a docked flagship with
+   *  spare troops automatically tops the garrison up to recommended. */
+  autoTopUpBelowStability: 40,
 } as const;
 
 /** Rival factions v1 (C8; C11 adds the formal action budget). */

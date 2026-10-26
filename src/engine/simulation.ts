@@ -14,6 +14,7 @@ import { hashSeed, Rng } from './random';
 import { generateGalaxy } from './galaxy';
 import { resolveFleetMovement, planTravel } from './movement';
 import { applyDevelopment, applyIncome, specialize } from './economy';
+import { recommendedGarrison } from './occupation';
 import { buildCost, canBuild, canRearm, canRepair, clampTroops, combatStrength, maxTroops, rearmCost, repairCost } from './fleets';
 import { canAttack, resolveBattle } from './combat';
 import { applyOccupation } from './occupation';
@@ -174,7 +175,8 @@ export type SimAction =
   | { type: 'ATTACK'; targetId: string; stance: Stance } // exactly 1 year (time-advancing)
   | { type: 'BUILD'; ship: ShipClass } // instant, 0 ticks
   | { type: 'REARM' } // instant, 0 ticks
-  | { type: 'SPECIALIZE'; systemId: string; specialization: Specialization }; // instant, 0 ticks (C9)
+  | { type: 'SPECIALIZE'; systemId: string; specialization: Specialization } // instant, 0 ticks (C9)
+  | { type: 'REINFORCE'; systemId: string }; // instant, 0 ticks (C10)
 
 /**
  * The ONLY actions that advance time (core §4: travel, waiting, repair,
@@ -211,6 +213,8 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
       return rearm(state);
     case 'SPECIALIZE':
       return specialize(state, action.systemId, action.specialization);
+    case 'REINFORCE':
+      return reinforce(state, action.systemId);
     default:
       // Unknown/unlisted actions never change anything (core §4).
       return state;
@@ -294,6 +298,32 @@ function rearm(state: GameState): GameState {
     tick: d.tick,
     kind: 'economy',
     text: `Troops board at ${at.name} (invasion strength ${d.flagship.troops}).`,
+  });
+  return d;
+}
+
+/**
+ * REINFORCE (C10, optional Tier-2): the flagship, docked at a player world,
+ * moves troops into its garrison up to the recommended level. Instant, 0
+ * ticks. Proactive twin of the auto top-up: same effect, chosen timing.
+ * No-op unless docked, world is occupied, garrison short, and troops spare.
+ */
+function reinforce(state: GameState, systemId: string): GameState {
+  const f = state.flagship;
+  if (f.travel !== null || f.systemId !== systemId) return state;
+  const s = state.galaxy.systems.find((x) => x.id === systemId);
+  if (!s || s.ownerId !== 'player' || s.occupation !== 'occupied' || !s.planet) return state;
+  const rec = recommendedGarrison(s.planet, s, state.galaxy);
+  if (s.planet.garrison >= rec || f.troops <= 0) return state;
+  const d = structuredClone(state) as GameState;
+  const t = d.galaxy.systems.find((x) => x.id === systemId)!;
+  const move = Math.min(rec - t.planet!.garrison, d.flagship.troops);
+  t.planet!.garrison += move;
+  d.flagship.troops -= move;
+  d.log.push({
+    tick: d.tick,
+    kind: 'economy',
+    text: `${move} troop${move === 1 ? '' : 's'} reinforced the garrison of ${t.planet!.name} (${t.planet!.garrison} standing).`,
   });
   return d;
 }

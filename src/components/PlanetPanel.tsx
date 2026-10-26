@@ -4,14 +4,26 @@
  */
 
 import type { ReactNode } from 'react';
-import type { Fleet, Specialization, System } from '../engine/types';
-import { ECON } from '../data/balance';
+import type { Fleet, GameState, Specialization, System } from '../engine/types';
+import { ECON, OCC } from '../data/balance';
 import { SPEC_LABEL, SPEC_NOTE, STAR_COLORS } from '../data/names';
 import { developmentCost, devRoman } from '../engine/economy';
-import { recommendedGarrison } from '../engine/occupation';
+import {
+  integrationEstimate,
+  isGarrisoned,
+  occupationStatus,
+  recommendedGarrison,
+  type OccupationStatus,
+} from '../engine/occupation';
 import { dispatch } from '../state/gameStore';
 
 const SPECS = Object.keys(SPEC_LABEL) as Specialization[];
+
+const STATUS_LABEL: Record<OccupationStatus, string> = {
+  stable: 'Stable',
+  unstable: 'Unstable',
+  imminent: 'Rebellion imminent',
+};
 
 function prodText(spec: Specialization, dev: number): string {
   const base = ECON.productionBySpec[spec];
@@ -37,6 +49,8 @@ function Row({
 
 export interface PlanetPanelProps {
   system: System | null;
+  /** The live game — occupation readouts + the reinforce control. */
+  game: GameState;
   /** Owner's display name, or "Unclaimed" — precomputed by the parent. */
   ownerName: string;
   /** Fleet currently in the system (flagship first), if any. */
@@ -45,7 +59,7 @@ export interface PlanetPanelProps {
   footer?: ReactNode;
 }
 
-export function PlanetPanel({ system, ownerName, fleet, footer }: PlanetPanelProps) {
+export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPanelProps) {
   if (!system) {
     return (
       <section className="panel planet-panel">
@@ -138,15 +152,52 @@ export function PlanetPanel({ system, ownerName, fleet, footer }: PlanetPanelPro
             system.occupation === 'integrated' ? (
               <Row label="Occupation" value="Integrated" />
             ) : (
-              <>
-                <Row label="Integration" value={`${p.integration}%`} />
-                <Row
-                  label="Garrison"
-                  value={`${p.garrison} (recommended ${recommendedGarrison(p)})`}
-                  warn={p.garrison < recommendedGarrison(p)}
-                />
-                <Row label="Stability" value={`${p.stability}`} warn={p.stability < 40} />
-              </>
+              (() => {
+                const rec = recommendedGarrison(p, system, game.galaxy);
+                const garrisoned = isGarrisoned(p, system, game.galaxy);
+                const status = occupationStatus(garrisoned, p.stability);
+                const est = integrationEstimate(p, garrisoned);
+                const f = game.flagship;
+                const docked = f.systemId === system.id && f.travel === null;
+                const canReinforce = docked && f.troops > 0 && p.garrison < rec;
+                return (
+                  <>
+                    <Row
+                      label="Occupation"
+                      value={STATUS_LABEL[status]}
+                      warn={status === 'imminent'}
+                    />
+                    <Row
+                      label="Integration"
+                      value={
+                        est !== null
+                          ? `${p.integration}% — ~${est} year${est === 1 ? '' : 's'} at current garrison`
+                          : `${p.integration}% — garrison required`
+                      }
+                      warn={!garrisoned}
+                    />
+                    <Row
+                      label="Garrison"
+                      value={`${p.garrison} (recommended ${rec})`}
+                      warn={p.garrison < rec}
+                    />
+                    <Row
+                      label="Stability"
+                      value={`${p.stability}`}
+                      warn={p.stability < OCC.autoTopUpBelowStability}
+                    />
+                    {canReinforce && (
+                      <button
+                        type="button"
+                        className="reinforce-btn"
+                        onClick={() => dispatch({ type: 'REINFORCE', systemId: system.id })}
+                      >
+                        Reinforce garrison (+{Math.min(rec - p.garrison, f.troops)} from the flagship)
+                      </button>
+                    )}
+                  </>
+                );
+              })()
             )
           )}
           {shipText && (

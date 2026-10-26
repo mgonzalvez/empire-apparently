@@ -120,6 +120,7 @@ export function GameScreen() {
           <FleetPanel game={game} />
           <PlanetPanel
             system={selected}
+            game={game}
             ownerName={selected ? ownerName(selected) : ''}
             fleet={selected ? fleetAt(selected.id) : null}
             footer={actionFooter}

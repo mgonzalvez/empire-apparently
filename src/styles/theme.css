@@ -599,6 +599,23 @@ li.log-advisor {
   font-weight: 600;
 }
 
+/* Reinforce garrison (C10): one command, troops leave the flagship. */
+.reinforce-btn {
+  font: inherit;
+  font-size: 0.75rem;
+  margin-top: 0.3rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 5px;
+  border: 1px solid var(--accent-2);
+  background: color-mix(in srgb, var(--accent-2) 12%, var(--surface-2));
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.reinforce-btn:hover {
+  background: color-mix(in srgb, var(--accent-2) 22%, var(--surface-2));
+}
+
 /* Title screen (C3 start door; C17 replaces with the themed title) */
 .seed-field {
   display: flex;

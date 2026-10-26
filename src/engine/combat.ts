@@ -30,6 +30,7 @@ import {
   combatStrength,
   invasionStrength,
 } from './fleets';
+import { recommendedGarrison } from './occupation';
 import type { BattleReport, FleetShips, GameState, ShipClass, Stance, System } from './types';
 
 export type { Stance };
@@ -200,16 +201,21 @@ export function resolveBattle(d: GameState, targetId: string, stance: Stance): B
 
       if (G === 0 || I >= G) {
         outcome = 'captured';
-        garrison = Math.floor(troopsAfter * COMBAT.garrisonFraction);
         target.previousOwnerId = target.ownerId;
         target.ownerId = 'player';
         target.occupation = 'occupied';
         if (target.planet) {
+          // C10: the recommended garrison is assigned from surviving troops
+          // (the world starts stable unless the fleet is troop-starved).
+          garrison = Math.min(
+            recommendedGarrison(target.planet, target, d.galaxy),
+            troopsAfter,
+          );
           target.planet.garrison = garrison;
           target.planet.stability = 100;
           target.planet.integration = 0;
         }
-        fleet.troops = Math.max(0, troopsAfter - garrison);
+        fleet.troops = Math.max(0, troopsAfter - (garrison ?? 0));
         d.stats.wins += 1;
         d.stats.conquests += 1;
       } else {
