@@ -174,23 +174,46 @@ describe('mechanical neutrality (SPEC §3, PLAN §10)', () => {
     }
   });
 
-  it('SET_ADVISOR mid-game changes only narration fields', () => {
+  it('the advisor greets the moment the mandate begins (campaign.start)', () => {
+    const g = newGame(777);
+    expect(g.events.length).toBe(1);
+    expect(g.events[0].type).toBe('campaign.start');
+    expect(g.lastDialogue).not.toBeNull();
+    expect(g.lastDialogue!.event).toBe('campaign.start');
+    expect(g.lastDialogue!.advisor).toBe('mort');
+    expect(g.lastDialogue!.text.length).toBeGreaterThan(0);
+    // Every selectable advisor has a greeting — the bar speaks for all three.
+    const bingo = newGame(777, { advisor: 'bingo' });
+    expect(bingo.lastDialogue!.lineId.startsWith('bingo.')).toBe(true);
+    const book = newGame(777, { advisor: 'handbook' });
+    expect(book.lastDialogue!.lineId.startsWith('handbook.')).toBe(true);
+  });
+
+  it('SET_ADVISOR: the switch is a typed fact, the new advisor answers, and nothing else moves', () => {
     let a = baseState('mort');
     a = dispatchSim(a, { type: 'WAIT' });
     const before = simProjection(a);
+    const beforeEvents = a.events.length;
     a = dispatchSim(a, { type: 'SET_ADVISOR', advisor: 'bingo' });
     expect(a.dialogue.advisor).toBe('bingo');
     expect(a.settings.advisor).toBe('bingo');
-    expect(simProjection(a)).toEqual(before); // zero sim effect
-    // And the next pick comes from the new advisor's pool (synthetic event —
-    // a tick's events aren't guaranteed narratable, the bar is).
-    a.events.push({ seq: a.dialogue.seq, tick: a.tick, type: 'ship.built' });
-    a.dialogue.seq += 1;
-    const narr = new Rng(a.narrRng);
-    applyNarration(a, narr);
-    a.narrRng = narr.state();
+    // The journal records exactly one new typed fact…
+    expect(a.events.length).toBe(beforeEvents + 1);
+    expect(a.events[a.events.length - 1].type).toBe('advisor.switched');
+    // …and with that excluded, everything is byte-identical.
+    const stripped = structuredClone(a) as GameState;
+    stripped.events.pop();
+    expect(simProjection(stripped)).toEqual(before);
+    // The new advisor takes the floor immediately — the click gets a reply.
     expect(a.lastDialogue).not.toBeNull();
+    expect(a.lastDialogue!.event).toBe('advisor.switched');
     expect(a.lastDialogue!.lineId.startsWith('bingo.')).toBe(true);
+    // Switching to the same advisor is a true no-op: same reference, no
+    // journal entry, no RNG churn.
+    const same = dispatchSim(a, { type: 'SET_ADVISOR', advisor: 'bingo' });
+    expect(same).toBe(a);
+    expect(same.events.length).toBe(beforeEvents + 1);
+    expect(same.narrRng).toEqual(a.narrRng);
   });
 
   it('picks are deterministic: same state, same narrRng, same line', () => {

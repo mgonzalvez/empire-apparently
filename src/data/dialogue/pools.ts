@@ -175,6 +175,13 @@ const MORT: DialogueLine[] = [
     'A rival flotilla has taken one of our worlds. The garrison was thin; the flotilla was not. Next time the arithmetic should be different. It is never different.'),
   L('mort.rival.attack.r1', 'rival.attack', 'rotation',
     '{factionName} struck {planetName}. The world has changed hands. The hands are not ours.'),
+
+  // Greeting layer (C19.5): the bar speaks the moment a campaign begins,
+  // and answers advisor switches without waiting for a sim event.
+  L('mort.campaign.start.r1', 'campaign.start', 'rotation',
+    'The mandate is accepted. I have reviewed the galaxy. It is large, it is hostile, and it is now entirely your responsibility. Shall we begin?'),
+  L('mort.advisor.switched.r1', 'advisor.switched', 'rotation',
+    'Reporting for duty. The galaxy, as ever, did not wait for the change.'),
 ];
 
 // ── B.I.N.G.O. — functional-minimal (C19; full pool C25) ────────────────
@@ -213,6 +220,10 @@ const BINGO: DialogueLine[] = [
     'The neighbors have been expanding, too! It is a growth district, sir — everyone is annexing; it is very communal.'),
   Lb('bingo.rival.attack.r1', 'rival.attack', 'rotation',
     'A "territory update" at {planetName}. A rival flotilla has moved in. I have flagged the loss, the grief, and the invoice.'),
+  Lb('bingo.campaign.start.r1', 'campaign.start', 'rotation',
+    'Welcome, sir! Your appointment is confirmed, your galaxy is assigned, and your paperwork is pre-sorted. Shall we begin? Oh — we begin.'),
+  Lb('bingo.advisor.switched.r1', 'advisor.switched', 'rotation',
+    'Right back with you! Same galaxy, same problems, fresh enthusiasm. You are in good hands — specifically, mine.'),
 ];
 
 // ── The Mostly Reliable Galactic Handbook — functional-minimal (C19;
@@ -252,6 +263,10 @@ const HANDBOOK: DialogueLine[] = [
     'A rival faction has expanded. The Handbook notes that empires, like gardens, require pruning — the rivals are pruning themselves, aggressively.'),
   Lh('handbook.rival.attack.r1', 'rival.attack', 'rotation',
     'A rival flotilla has taken {planetName}. The Handbook observes that the loss was arithmetically telegraphed. The reader will note that the telegraph was, in fact, visible.'),
+  Lh('handbook.campaign.start.r1', 'campaign.start', 'rotation',
+    'The Handbook records the acceptance of the mandate. The galaxy has been assigned to the Reader. The Reader should note that "assigned" is doing a great deal of work in that sentence.'),
+  Lh('handbook.advisor.switched.r1', 'advisor.switched', 'rotation',
+    'The Handbook takes the floor. Its commentary is available at any time, requested or otherwise. The Reader will continue; the galaxy, as ever, will not wait.'),
 ];
 
 export const MORT_LINES = MORT;

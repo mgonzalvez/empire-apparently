@@ -52,7 +52,7 @@ export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
   const homeworld = galaxy.systems.find((s) => s.id === galaxy.homeworldId)!;
   homeworld.occupation = 'integrated';
   if (homeworld.planet) homeworld.planet.integration = 100;
-  return {
+  const state: GameState = {
     v: 1,
     seed,
     tick: 0,
@@ -113,6 +113,14 @@ export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
       },
     ],
   };
+  // C19.5: the advisor greets the moment the mandate begins — the bar must
+  // speak without waiting for a sim event. Deterministic: the pick draws
+  // from the seed-derived narrRng (the sim stream is untouched).
+  emit(state, 'campaign.start');
+  const narr = new Rng(state.narrRng);
+  applyNarration(state, narr);
+  state.narrRng = narr.state();
+  return state;
 }
 
 // ── Tick pipeline (core §4 — fixed order, one galactic clock) ────────────
@@ -271,7 +279,7 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
     case 'EVACUATE':
       return narrate(evacuate(state, action.systemId));
     case 'SET_ADVISOR':
-      return setAdvisor(state, action.advisor);
+      return narrate(setAdvisor(state, action.advisor));
     default:
       // Unknown/unlisted actions never change anything (core §4).
       return state;
@@ -286,6 +294,9 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
  * emits no events and advances no narration.
  */
 function narrate(next: GameState): GameState {
+  // No un-narrated events → no-op (no RNG churn, no mutation of `next`).
+  const hasFresh = next.events.some((e) => e.seq > next.dialogue.lastNarratedSeq);
+  if (!hasFresh) return next;
   const narr = new Rng(next.narrRng);
   applyNarration(next, narr);
   next.narrRng = narr.state();
@@ -304,6 +315,9 @@ function setAdvisor(state: GameState, advisor: AdvisorId): GameState {
   const d = structuredClone(state) as GameState;
   d.dialogue.advisor = a;
   d.settings.advisor = a;
+  // The switch is a typed fact in the campaign journal (off-ledger — it
+  // advances no time); the narrator answers it (narrate() in dispatchSim).
+  emit(d, 'advisor.switched');
   return d;
 }
 

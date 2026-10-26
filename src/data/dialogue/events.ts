@@ -2,7 +2,7 @@
  * The semantic event catalog (C19; PLAN §10 "catalog is data, not code").
  *
  * Every event the engine emits, with a conventional label (for tooltips,
- * the C30 Handbook, and the dialogue-variety audit). All 20 are narratable
+ * the C30 Handbook, and the dialogue-variety audit). All 22 are narratable
  * by at least the complete advisor (M.O.R.T.); the functional-minimal
  * advisors (B.I.N.G.O., Handbook — full pools C25/C26) cover the frequent
  * subset and silently skip the rest (the bar keeps its last line).
@@ -17,6 +17,8 @@
 import type { SimEventType } from '../../engine/types';
 
 export const DIALOGUE_EVENT_CATALOG: Record<SimEventType, { label: string }> = {
+  'campaign.start': { label: 'Mandate accepted' },
+  'advisor.switched': { label: 'Advisor change' },
   'travel.depart': { label: 'Setting course' },
   'travel.arrive': { label: 'Arrival' },
   'recon.reveal': { label: 'Reconnaissance' },

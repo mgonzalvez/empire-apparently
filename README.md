@@ -10,14 +10,17 @@ Static client-side browser game for GitHub Pages.
 
 ## Status
 
-**Phases A–F complete (C1–C18) — playable end to end, with a front door.**
+**Phases A–G complete (C1–C19) — playable end to end, and the galaxy talks back.**
 From the title screen you start a campaign (seed, advisor, supernova
 frequency), then explore a seeded 20-system galaxy, travel, build, fight,
 conquer, and integrate worlds, delegate to support fleets, and evacuate
 before supernovas — winning the mandate (or losing it: wipe, no recovery
 path, or the 150-year deadline). Progress autosaves; the title screen
-resumes it exactly. Next: C19 (dialogue variety engine + M.O.R.T. — the
-advisor finally speaks). Live status: `IMPLEMENTATION_STATUS.md`.
+resumes it exactly. Your advisor of record (M.O.R.T., or the functional
+B.I.N.G.O. / Handbook) comments on everything through the dialogue variety
+engine — narration stays a separate layer from the factual reports, and
+switching advisors never changes the simulation. Next: C20 (tutorial
+engine). Live status: `IMPLEMENTATION_STATUS.md`.
 
 ## Reading order
 

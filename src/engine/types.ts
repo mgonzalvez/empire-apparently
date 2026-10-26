@@ -97,8 +97,14 @@ export type FactionKind = 'player' | 'rival' | 'independent';
  * a separate surface (P5). Pruned from the PLAN §10 draft: victory/defeat
  * (the end screen presents them), event.resolved (arrives with C29),
  * rival.defeated (the current rules never eliminate a rival).
+ *
+ * `campaign.start` and `advisor.switched` are the greeting layer (C19.5): the
+ * bar speaks the moment a campaign begins and answers advisor switches
+ * without waiting for a sim event.
  */
 export type SimEventType =
+  | 'campaign.start'
+  | 'advisor.switched'
   | 'travel.depart'
   | 'travel.arrive'
   | 'recon.reveal'
