@@ -171,6 +171,11 @@ function detonate(d: GameState, s: System): void {
   s.evacuationTicks = 0;
   s.destroyed = true;
 
+  // Survived supernova (core §12 stat): the star detonated and the campaign
+  // continues. The homeworld is never a candidate (fairness), so every
+  // detonation is one the player survives.
+  d.stats.supernovas += 1;
+
   d.log.push({
     tick: d.tick,
     kind: 'event',

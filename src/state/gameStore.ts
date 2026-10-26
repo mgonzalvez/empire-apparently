@@ -14,6 +14,7 @@ import {
 } from '../engine/simulation';
 import type { GameState, ShipClass, Specialization, Stance, SupportMission } from '../engine/types';
 import { clearSave, saveGame } from './persistence';
+import { isSoundOn } from '../audio/sfx';
 
 export interface StoreState {
   /** null = title screen. */
@@ -84,7 +85,12 @@ export function dispatch(action: StoreAction): void {
 function reduce(s: StoreState, action: StoreAction): StoreState {
   switch (action.type) {
     case 'NEW_GAME': {
-      const game = newGame(action.seed, action);
+      // C18: record the persisted sound preference in the new save
+      // (off by default; playback itself reads the audio module).
+      const game = newGame(action.seed, {
+        ...action,
+        sound: action.sound ?? isSoundOn(),
+      });
       // Open on the homeworld — the one place the player definitely knows.
       return { game, selectedSystemId: game.galaxy.homeworldId, dismissedBattleTick: -1 };
     }

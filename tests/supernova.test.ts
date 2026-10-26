@@ -246,3 +246,13 @@ describe('C16 evacuation & detonation (Gate M4)', () => {
     expect(homeA.planet!.population).toBe(homeB.planet!.population + 4);
   });
 });
+
+describe('C18 — survived-supernovas stat (core §12)', () => {
+  it('each detonation during an active campaign increments stats.supernovas', () => {
+    let s = fixtureState();
+    const before = s.stats.supernovas;
+    const s07 = () => s.galaxy.systems.find((x) => x.id === 'S07')!;
+    while (!s07().destroyed) s = runYears(s, 1);
+    expect(s.stats.supernovas).toBe(before + 1);
+  });
+});

@@ -19,6 +19,7 @@ import {
   type OccupationStatus,
 } from '../engine/occupation';
 import { dispatch } from '../state/gameStore';
+import { playSfx } from '../audio/sfx';
 
 const SPECS = Object.keys(SPEC_LABEL) as Specialization[];
 
@@ -154,7 +155,10 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
                         className="yard-btn"
                         disabled={!evacGate.ok || game.status !== 'active'}
                         title={evacGate.ok ? undefined : evacGate.reason ?? undefined}
-                        onClick={() => dispatch({ type: 'EVACUATE', systemId: system.id })}
+                        onClick={() => {
+                          playSfx('ui');
+                          dispatch({ type: 'EVACUATE', systemId: system.id });
+                        }}
                       >
                         <span>
                           Evacuate — {GALAXY.supernova.evacuation.credits}C, {GALAXY.supernova.evacuation.ticks} years
@@ -203,9 +207,10 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
                       type="button"
                       className={p.specialization === sp ? 'active' : ''}
                       title={`${SPEC_LABEL[sp]} — ${SPEC_NOTE[sp]} Produces ${prodText(sp, p.development)}/year.`}
-                      onClick={() =>
-                        dispatch({ type: 'SPECIALIZE', systemId: system.id, specialization: sp })
-                      }
+                      onClick={() => {
+                        playSfx('ui');
+                        dispatch({ type: 'SPECIALIZE', systemId: system.id, specialization: sp });
+                      }}
                     >
                       {SPEC_LABEL[sp]}
                     </button>
@@ -271,7 +276,10 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
                       <button
                         type="button"
                         className="reinforce-btn"
-                        onClick={() => dispatch({ type: 'REINFORCE', systemId: system.id })}
+                        onClick={() => {
+                          playSfx('ui');
+                          dispatch({ type: 'REINFORCE', systemId: system.id });
+                        }}
                       >
                         Reinforce garrison (+{Math.min(rec - p.garrison, f.troops)} from the flagship)
                       </button>

@@ -6,8 +6,10 @@
  * this modal, never inside it.
  */
 
-import type { BattleReport, BattleOutcome } from '../engine/types';
+import { useEffect } from 'react';
+import type { BattleReport, BattleOutcome, FleetShips, ShipClass } from '../engine/types';
 import { STANCE_LABEL, STANCE_NOTE } from '../engine/combat';
+import { playSfx } from '../audio/sfx';
 
 const OUTCOME_TEXT: Record<BattleOutcome, string> = {
   captured: 'World captured.',
@@ -16,6 +18,20 @@ const OUTCOME_TEXT: Record<BattleOutcome, string> = {
   withdrawn: 'Orbit secured — the fleet withdrew.',
   'no-lift': 'Orbit secured — no transports remain to land.',
 };
+
+const SHIP_WORDS: [ShipClass, string, string][] = [
+  ['interceptor', 'interceptor', 'interceptors'],
+  ['cruiser', 'cruiser', 'cruisers'],
+  ['transport', 'transport', 'transports'],
+];
+
+/** "2 interceptors · 1 cruiser · 0 transports" — no abbreviations (C18). */
+function shipLine(n: FleetShips): string {
+  const parts = SHIP_WORDS.map(([cls, singular, plural]) =>
+    `${n[cls]} ${n[cls] === 1 ? singular : plural}`,
+  );
+  return parts.join(' · ');
+}
 
 export interface BattleReportModalProps {
   report: BattleReport;
@@ -34,6 +50,12 @@ function Row({ label, value }: { label: string; value: string }) {
 export function BattleReportModal({ report: r, onContinue }: BattleReportModalProps) {
   const lostTotal =
     r.shipsLost.interceptor + r.shipsLost.cruiser + r.shipsLost.transport;
+
+  // The result blip is a separate layer from the 100%-factual report (P5).
+  useEffect(() => {
+    playSfx(r.outcome === 'captured' ? 'combat-win' : r.outcome === 'held' ? 'combat-loss' : 'ui');
+  }, [r.outcome]);
+
   return (
     <div className="dialog-backdrop">
       <div
@@ -52,16 +74,9 @@ export function BattleReportModal({ report: r, onContinue }: BattleReportModalPr
         />
         <Row
           label="Ships lost"
-          value={
-            lostTotal > 0
-              ? `${lostTotal} — ${r.shipsLost.interceptor} int · ${r.shipsLost.cruiser} cru · ${r.shipsLost.transport} trp`
-              : 'none'
-          }
+          value={lostTotal > 0 ? `${lostTotal} — ${shipLine(r.shipsLost)}` : 'none'}
         />
-        <Row
-          label="Ships remaining"
-          value={`${r.shipsAfter.interceptor} int · ${r.shipsAfter.cruiser} cru · ${r.shipsAfter.transport} trp`}
-        />
+        <Row label="Ships remaining" value={shipLine(r.shipsAfter)} />
         <Row label="Hull after" value={`${r.hullAfter}%`} />
         <Row label="Troops lost" value={String(r.troopsLost)} />
         <Row label="Troops remaining" value={String(r.troopsAfter)} />

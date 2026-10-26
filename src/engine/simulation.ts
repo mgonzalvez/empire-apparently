@@ -32,6 +32,9 @@ export interface NewGameOptions {
   /** C17: the advisor of record. Mechanically neutral (C19 makes it speak;
    *  until then it is stored, never consulted by the sim). */
   advisor?: AdvisorId;
+  /** C18: sound preference recorded into the save (playback reads the
+   *  audio module's persisted preference; off by default). */
+  sound?: boolean;
 }
 
 const ADVISOR_IDS: readonly AdvisorId[] = ['mort', 'bingo', 'handbook'];
@@ -76,7 +79,7 @@ export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
       hints: 'normal',
       supernovaFreq: frequency,
       advisor,
-      sound: false,
+      sound: opts.sound ?? false,
       theme: 'system',
     },
     stats: {

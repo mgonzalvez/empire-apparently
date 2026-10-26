@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { CAMPAIGN } from '../src/data/balance';
+import { CAMPAIGN, EMPIRE_SCORE } from '../src/data/balance';
 import { createFixtureGalaxy } from '../src/engine/galaxy';
 import { newGame, runYears } from '../src/engine/simulation';
+import { alignmentProgress, empireScore, evaluateWinLose } from '../src/engine/victory';
 import type { GameState, System } from '../src/engine/types';
 
 const SEED = 4242;
@@ -112,5 +113,76 @@ describe('victory & defeat (C8)', () => {
     s = runYears(s, 1);
     expect(s.status).toBe('defeat');
     expect(s.defeatReason).toBe('total');
+  });
+});
+
+describe('C18 — mandate progress readout & empire score', () => {
+  function ownedAnd(s: GameState, owned: boolean, integrated: boolean): void {
+    for (const t of s.galaxy.systems) {
+      if (!t.planet) continue;
+      t.ownerId = owned ? 'player' : t.id === s.galaxy.homeworldId ? 'player' : 'rival-0';
+      t.occupation = integrated
+        ? 'integrated'
+        : t.id === s.galaxy.homeworldId
+          ? 'integrated'
+          : 'occupied';
+    }
+  }
+
+  function engineVerdict(s: GameState): boolean {
+    const d = structuredClone(s);
+    evaluateWinLose(d);
+    return d.status === 'victory';
+  }
+
+  it('alignmentProgress matches the win/lose rule exactly (shown = simulated)', () => {
+    const cases: Array<[boolean, boolean, string]> = [
+      [false, true, 'start: only the homeworld is aligned'],
+      [true, true, 'all owned, all integrated — victory'],
+      [true, false, 'all owned, only the homeworld integrated — 60% gate fails'],
+      [false, true, 'not everything is under authority — ownership fails'],
+    ];
+    for (const [owned, integrated, label] of cases) {
+      const s = fixtureState();
+      ownedAnd(s, owned, integrated);
+      const prog = alignmentProgress(s);
+      expect(prog.complete, label).toBe(engineVerdict(s));
+    }
+  });
+
+  it('destroyed systems are excluded from the mandate denominator (core §12)', () => {
+    const s = fixtureState();
+    ownedAnd(s, true, true);
+    const totalBefore = alignmentProgress(s).total;
+    const neutral = s.galaxy.systems.find(
+      (t) => t.planet && t.ownerId !== 'rival-0' && !t.destroyed,
+    )!;
+    neutral.destroyed = true;
+    neutral.planet = null;
+    const prog = alignmentProgress(s);
+    expect(prog.total).toBe(totalBefore - 1);
+    expect(engineVerdict(s)).toBe(true); // the remnant does not block victory
+  });
+
+  it('the empire score is the transparent formula from balance.ts, floored at 0', () => {
+    const s = fixtureState();
+    s.stats.conquests = 3;
+    s.stats.fleetsLost = 2;
+    s.stats.supernovas = 1;
+    s.tick = 40;
+    const { aligned } = alignmentProgress(s); // homeworld only, at tick 0 baseline
+    const expected =
+      3 * EMPIRE_SCORE.perConquest +
+      aligned * EMPIRE_SCORE.perAlignedWorld +
+      1 * EMPIRE_SCORE.perSurvivedSupernova +
+      2 * EMPIRE_SCORE.perFleetLost +
+      40 * EMPIRE_SCORE.perYearServed;
+    expect(empireScore(s)).toBe(Math.max(0, expected));
+
+    // A short, bleed-heavy campaign floors at zero — never negative.
+    const f = fixtureState();
+    f.stats.fleetsLost = 10;
+    f.tick = 150;
+    expect(empireScore(f)).toBe(0);
   });
 });

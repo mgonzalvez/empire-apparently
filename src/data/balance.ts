@@ -126,6 +126,19 @@ export const CAMPAIGN = {
   maxLogEntries: 400,
 } as const;
 
+/**
+ * Empire score (C18; core §12 "final empire score"). Transparent weights on
+ * the stats shown on the end screen — no hidden terms. ⚠ v1 assumption —
+ * tuned in C34.
+ */
+export const EMPIRE_SCORE = {
+  perConquest: 25,
+  perAlignedWorld: 15,
+  perSurvivedSupernova: 20,
+  perFleetLost: -10,
+  perYearServed: -1,
+} as const;
+
 /** Travel (C4; core §6: fuel by fleet size and distance, clear range rule). */
 export const MOVE = {
   /**

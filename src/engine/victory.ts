@@ -14,9 +14,58 @@
  * the final year still wins.
  */
 
-import { CAMPAIGN } from '../data/balance';
+import { CAMPAIGN, EMPIRE_SCORE } from '../data/balance';
 import { isShipyard, totalShips } from './fleets';
 import type { GameState } from './types';
+
+/**
+ * Mandate progress (C18) — the ONE source of truth shared by the win/lose
+ * rule and the on-screen objective readout: what is shown is what is
+ * simulated. Victory (core §12, PLAN §4): every surviving inhabitable
+ * system is player-controlled AND at least CAMPAIGN.victoryIntegration
+ * (60%) are aligned (integrated, the homeworld from the start).
+ */
+export interface AlignmentProgress {
+  /** Surviving inhabited worlds (destroyed excluded) — the mandate's denominator. */
+  total: number;
+  /** Worlds under player authority. */
+  owned: number;
+  /** Aligned: player-controlled AND (integrated OR the homeworld). */
+  aligned: number;
+  /** True exactly when the campaign is in a winning position. */
+  complete: boolean;
+}
+
+export function alignmentProgress(g: GameState): AlignmentProgress {
+  const inhabited = g.galaxy.systems.filter((s) => s.planet !== null && !s.destroyed);
+  const owned = inhabited.filter((s) => s.ownerId === 'player').length;
+  const aligned = inhabited.filter(
+    (s) =>
+      s.ownerId === 'player' &&
+      (s.occupation === 'integrated' || s.id === g.galaxy.homeworldId),
+  ).length;
+  const complete =
+    inhabited.length > 0 &&
+    owned === inhabited.length &&
+    aligned / inhabited.length >= CAMPAIGN.victoryIntegration;
+  return { total: inhabited.length, owned, aligned, complete };
+}
+
+/**
+ * Final empire score (C18; core §12). A transparent weighted sum of the
+ * stats the end screen already shows — weights live in balance.ts (⚠ v1),
+ * floored at 0. Display-only: never consulted by the sim.
+ */
+export function empireScore(g: GameState): number {
+  const { aligned } = alignmentProgress(g);
+  const raw =
+    g.stats.conquests * EMPIRE_SCORE.perConquest +
+    aligned * EMPIRE_SCORE.perAlignedWorld +
+    g.stats.supernovas * EMPIRE_SCORE.perSurvivedSupernova +
+    g.stats.fleetsLost * EMPIRE_SCORE.perFleetLost +
+    g.tick * EMPIRE_SCORE.perYearServed;
+  return Math.max(0, raw);
+}
 
 export function evaluateWinLose(d: GameState): void {
   if (d.status !== 'active') return;
@@ -46,16 +95,8 @@ export function evaluateWinLose(d: GameState): void {
     return;
   }
 
-  const inhabitable = d.galaxy.systems.filter((s) => s.planet !== null && !s.destroyed);
-  const allOwned =
-    inhabitable.length > 0 && inhabitable.every((s) => s.ownerId === 'player');
-  const integrated = inhabitable.filter(
-    (s) =>
-      s.ownerId === 'player' &&
-      (s.occupation === 'integrated' || s.id === d.galaxy.homeworldId),
-  ).length;
-
-  if (allOwned && integrated / inhabitable.length >= CAMPAIGN.victoryIntegration) {
+  const prog = alignmentProgress(d);
+  if (prog.complete) {
     d.status = 'victory';
     d.log.push({
       tick: d.tick,

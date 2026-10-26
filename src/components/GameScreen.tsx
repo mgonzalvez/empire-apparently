@@ -22,6 +22,7 @@ import { PlanetPanel } from './PlanetPanel';
 import { TravelDialog } from './TravelDialog';
 import { BattleReportModal } from './BattleReport';
 import { VictoryDefeatScreen } from './VictoryDefeatScreen';
+import { playSfx } from '../audio/sfx';
 
 export function GameScreen() {
   const { game, selectedSystemId, dismissedBattleTick } = useStore();
@@ -107,7 +108,10 @@ export function GameScreen() {
             <button
               type="button"
               disabled={game.status !== 'active'}
-              onClick={() => dispatch({ type: 'WAIT' })}
+              onClick={() => {
+                playSfx('ui');
+                dispatch({ type: 'WAIT' });
+              }}
             >
               Wait one year ▸
             </button>
@@ -135,6 +139,7 @@ export function GameScreen() {
           destinationId={dialogTarget}
           onClose={() => setDialogTarget(null)}
           onConfirm={() => {
+            playSfx('travel');
             dispatch({ type: 'TRAVEL', destinationId: dialogTarget });
             setDialogTarget(null);
           }}

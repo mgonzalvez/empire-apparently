@@ -22,6 +22,7 @@ import {
 import { STATE_LABEL, SUPPORT_COST, canAssignMission, canCommission, reinforceBoardingCost } from '../engine/support';
 import { SUPPORT } from '../data/balance';
 import { dispatch } from '../state/gameStore';
+import { playSfx } from '../audio/sfx';
 
 const SHIP_LABEL: Record<ShipClass, string> = {
   interceptor: 'interceptor',
@@ -110,7 +111,7 @@ export function FleetPanel({ game }: { game: GameState }) {
       <div className="row">
         <span className="label">Ships</span>
         <span className="value">
-          {f.ships.interceptor} int · {f.ships.cruiser} cru · {f.ships.transport} trp
+          {f.ships.interceptor} interceptors · {f.ships.cruiser} cruisers · {f.ships.transport} transports
         </span>
       </div>
 
@@ -127,7 +128,10 @@ export function FleetPanel({ game }: { game: GameState }) {
                 className="yard-btn"
                 disabled={!gate.ok || game.status !== 'active'}
                 title={gate.ok ? undefined : gate.reason ?? undefined}
-                onClick={() => dispatch({ type: 'BUILD', ship })}
+                onClick={() => {
+                  playSfx('build');
+                  dispatch({ type: 'BUILD', ship });
+                }}
               >
                 <span>
                   Add {SHIP_LABEL[ship]} — {cost.credits}C / {cost.materials}M
@@ -147,7 +151,10 @@ export function FleetPanel({ game }: { game: GameState }) {
               className="yard-btn"
               disabled={!rearmGate.ok || game.status !== 'active'}
               title={rearmGate.ok ? undefined : rearmGate.reason ?? undefined}
-              onClick={() => dispatch({ type: 'REARM' })}
+              onClick={() => {
+                playSfx('ui');
+                dispatch({ type: 'REARM' });
+              }}
             >
               <span>
                 Refill invasion personnel — {rearmCost(f)}C
@@ -166,7 +173,10 @@ export function FleetPanel({ game }: { game: GameState }) {
           className="yard-btn"
           disabled={!repairGate.ok || game.status !== 'active'}
           title={repairGate.ok ? undefined : repairGate.reason ?? undefined}
-          onClick={() => dispatch({ type: 'REPAIR' })}
+          onClick={() => {
+            playSfx('build');
+            dispatch({ type: 'REPAIR' });
+          }}
         >
           <span>
             Repair hull — {repairCost().credits}C, 1 year
@@ -211,6 +221,7 @@ export function FleetPanel({ game }: { game: GameState }) {
                     const [mission, targetId] = v.split(':');
                     dispatch({ type: 'ASSIGN_MISSION', fleetId: sf.id, mission: mission as SupportMission, targetId });
                   }
+                  playSfx('ui');
                 }}
               >
                 <option value="">— patrol home —</option>
@@ -232,7 +243,10 @@ export function FleetPanel({ game }: { game: GameState }) {
             className="yard-btn"
             disabled={!commissionGate.ok || game.status !== 'active'}
             title={commissionGate.ok ? undefined : commissionGate.reason ?? undefined}
-            onClick={() => dispatch({ type: 'COMMISSION' })}
+            onClick={() => {
+              playSfx('build');
+              dispatch({ type: 'COMMISSION' });
+            }}
           >
             <span>
               Commission support fleet — {SUPPORT_COST.credits}C / {SUPPORT_COST.materials}M

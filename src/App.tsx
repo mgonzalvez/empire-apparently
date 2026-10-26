@@ -34,7 +34,7 @@ export default function App() {
   };
 
   return (
-    <div className="app">
+    <div className="app" data-advisor={game ? game.settings.advisor : undefined}>
       {game ? (
         <GameScreen key={game.seed} />
       ) : frontDoor === 'setup' ? (

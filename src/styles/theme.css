@@ -377,6 +377,9 @@ li.log-event {
 
 li.log-advisor {
   font-style: italic;
+  /* Advisor accent (C18): the color the selected advisor speaks in.
+     The lines themselves arrive with C19. */
+  color: var(--advisor-accent, var(--accent-2));
 }
 
 /* Travel dialog (C4) */
@@ -614,6 +617,60 @@ li.log-advisor {
 
 .reinforce-btn:hover {
   background: color-mix(in srgb, var(--accent-2) 22%, var(--surface-2));
+}
+
+/* Advisor accents (C18): each advisor speaks in its own color. The app root
+   carries data-advisor from the selected advisor (C17 setup); dialogue text
+   lands in C19. Colors are theme-aware. */
+:root {
+  --advisor-color-mort: #52708f;
+  --advisor-color-bingo: #d97706;
+  --advisor-color-handbook: #8a6d3b;
+}
+
+[data-theme='dark'] {
+  --advisor-color-mort: #8fb3d9;
+  --advisor-color-bingo: #ffb454;
+  --advisor-color-handbook: #d4b95e;
+}
+
+.app[data-advisor='mort'] {
+  --advisor-accent: var(--advisor-color-mort);
+}
+
+.app[data-advisor='bingo'] {
+  --advisor-accent: var(--advisor-color-bingo);
+}
+
+.app[data-advisor='handbook'] {
+  --advisor-accent: var(--advisor-color-handbook);
+}
+
+.advisor-pick button.active[data-advisor-id='mort'] {
+  border-color: var(--advisor-color-mort);
+  background: color-mix(in srgb, var(--advisor-color-mort) 16%, var(--surface-2));
+}
+
+.advisor-pick button.active[data-advisor-id='bingo'] {
+  border-color: var(--advisor-color-bingo);
+  background: color-mix(in srgb, var(--advisor-color-bingo) 16%, var(--surface-2));
+}
+
+.advisor-pick button.active[data-advisor-id='handbook'] {
+  border-color: var(--advisor-color-handbook);
+  background: color-mix(in srgb, var(--advisor-color-handbook) 16%, var(--surface-2));
+}
+
+/* Empire bar objective readout (C18) */
+.empire-objective {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+/* End-screen empire score (C18) */
+.empire-score {
+  margin: 0.9rem 0 0;
+  font-size: 1.05rem;
 }
 
 /* Title screen (C17: themed front door; the C3 prototype door is retired) */

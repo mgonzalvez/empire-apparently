@@ -88,6 +88,7 @@ export function NewGameSetup({ onBack }: Props) {
                   key={a.id}
                   type="button"
                   className={advisor === a.id ? 'active' : ''}
+                  data-advisor-id={a.id}
                   disabled={!a.operational}
                   title={
                     a.operational
