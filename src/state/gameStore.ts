@@ -13,6 +13,7 @@ import {
   type NewGameOptions,
 } from '../engine/simulation';
 import type { GameState, ShipClass, Specialization, Stance, SupportMission } from '../engine/types';
+import { clearSave, saveGame } from './persistence';
 
 export interface StoreState {
   /** null = title screen. */
@@ -67,7 +68,16 @@ export function subscribe(listener: () => void): () => void {
 export function dispatch(action: StoreAction): void {
   const next = reduce(current, action);
   if (next === current) return;
+  const prev = current;
   current = next;
+  // Autosave (C17, PLAN §7): persist whenever the GAME state changes.
+  // View-only actions (selection, dialogs) keep the same game reference and
+  // never write. A finished mandate has nothing left to resume — the save
+  // is cleared so "Resume Previous Mistake" never offers a dead campaign.
+  if (next.game && next.game !== prev.game) {
+    if (next.game.status === 'active') saveGame(next.game);
+    else clearSave();
+  }
   for (const l of listeners) l();
 }
 

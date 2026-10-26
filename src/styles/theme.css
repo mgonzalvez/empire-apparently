@@ -616,12 +616,175 @@ li.log-advisor {
   background: color-mix(in srgb, var(--accent-2) 22%, var(--surface-2));
 }
 
-/* Title screen (C3 start door; C17 replaces with the themed title) */
+/* Title screen (C17: themed front door; the C3 prototype door is retired) */
+.title-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1.5rem 2rem;
+  max-width: 30rem;
+  text-align: center;
+}
+
+.title-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.title-actions button {
+  font: inherit;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.title-actions button:hover {
+  border-color: var(--accent);
+}
+
+.title-actions button.primary {
+  font-weight: 700;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.title-card > .muted {
+  margin: 0.9rem 0 0;
+}
+
+/* New-game setup & options (C17) */
+.setup-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 1.4rem 1.7rem;
+  max-width: 34rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.setup-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.setup-title {
+  margin: 0;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.advisor-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.advisor-pick button {
+  font: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  padding: 0.5rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.advisor-pick button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.advisor-pick button.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--surface-2));
+  font-weight: 600;
+}
+
+.advisor-pick button:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.setup-unsure {
+  color: var(--ink-muted);
+  font-size: 0.82em;
+}
+
+.freq-pick {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.freq-pick button {
+  font: inherit;
+  font-size: 0.9rem;
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+}
+
+.freq-pick button + button {
+  border-left: 1px solid var(--line);
+}
+
+.freq-pick button.active {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.setup-footer {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+}
+
+.setup-footer button {
+  font: inherit;
+  flex: 1;
+  border-radius: 6px;
+  padding: 0.55rem 1rem;
+  cursor: pointer;
+}
+
+.setup-footer button.secondary {
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.setup-footer button.secondary:hover {
+  border-color: var(--accent);
+}
+
+.setup-footer button.primary {
+  font-weight: 700;
+  background: var(--accent);
+  border: 0;
+  color: #fff;
+}
+
+/* Seed input (C3 field, C17 home: new-game setup) */
 .seed-field {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
-  margin: 1rem 0;
   font-size: 0.9rem;
   color: var(--ink-muted);
   align-items: flex-start;
@@ -635,15 +798,4 @@ li.log-advisor {
   background: var(--bg);
   color: var(--ink);
   width: 12rem;
-}
-
-.placeholder-card button.primary {
-  font: inherit;
-  font-weight: 600;
-  background: var(--accent);
-  color: #fff;
-  border: 0;
-  border-radius: 6px;
-  padding: 0.55rem 1.4rem;
-  cursor: pointer;
 }

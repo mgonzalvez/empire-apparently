@@ -23,16 +23,25 @@ import { applySupportFleets, assignMission, commission } from './support';
 import { applySupernovas, evacuate } from './supernova';
 import { evaluateWinLose } from './victory';
 import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
-import type { GameState, ShipClass, Specialization, Stance, SupportMission } from './types';
+import type { AdvisorId, GameState, ShipClass, Specialization, Stance, SupportMission } from './types';
 
 // ── New game ─────────────────────────────────────────────────────────────
 
 export interface NewGameOptions {
   supernovaFrequency?: 'zero' | 'low' | 'normal';
+  /** C17: the advisor of record. Mechanically neutral (C19 makes it speak;
+   *  until then it is stored, never consulted by the sim). */
+  advisor?: AdvisorId;
 }
+
+const ADVISOR_IDS: readonly AdvisorId[] = ['mort', 'bingo', 'handbook'];
 
 export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
   const frequency = opts.supernovaFrequency ?? GALAXY.supernova.defaultFrequency;
+  const advisor =
+    opts.advisor !== undefined && ADVISOR_IDS.includes(opts.advisor)
+      ? opts.advisor
+      : 'mort';
   const galaxy = generateGalaxy(seed, { supernovaFrequency: frequency });
   // The homeworld is the player's from the start — fully integrated.
   const homeworld = galaxy.systems.find((s) => s.id === galaxy.homeworldId)!;
@@ -62,11 +71,11 @@ export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
     rivals: [],
     narrative: { resolvedIds: [], cooldowns: {} },
     tutorial: null,
-    dialogue: { advisor: 'mort', recentIds: [], shown: {} },
+    dialogue: { advisor, recentIds: [], shown: {} },
     settings: {
       hints: 'normal',
       supernovaFreq: frequency,
-      advisor: 'mort',
+      advisor,
       sound: false,
       theme: 'system',
     },
