@@ -202,7 +202,33 @@ function detonate(d: GameState, s: System): void {
  * advance instability + transition alerts (a star that reaches 100 this
  * tick is armed and detonates NEXT tick — the warning is always visible).
  */
+/**
+ * C21 — piecewise instability for the scripted tutorial star (deterministic).
+ * The value is set at the START of the stars stage; the normal progression
+ * (rate ≥ 1) then completes the tick, so the transition logs fire in the
+ * existing pipeline: 30→40 (stable), 45→55 (anomalous, tick 14), 70→80
+ * (critical, tick 17), 99→100 ("on the edge", tick 20), detonation tick 21.
+ */
+export function scriptedInstability(
+  tick: number,
+  s: { anomalousAt: number; criticalAt: number; armedAt: number },
+): number {
+  if (tick >= s.armedAt + 1) return 100;
+  if (tick >= s.armedAt) return 99;
+  if (tick >= s.criticalAt) return 70;
+  if (tick >= s.anomalousAt) return 45;
+  return 30;
+}
+
 export function applySupernovas(d: GameState): void {
+  // C21 — scripted supernova (tutorial scenario): the star's instability is
+  // pinned to exact ticks; everything else (transition logs, emissions,
+  // detonation) flows through the normal pipeline below.
+  const script = d.scriptedSupernova;
+  if (script) {
+    const star = d.galaxy.systems.find((s) => s.id === script.systemId);
+    if (star && !star.destroyed) star.instability = scriptedInstability(d.tick, script);
+  }
   for (const s of d.galaxy.systems) {
     if (s.evacuationTicks <= 0 || s.destroyed) continue;
     s.evacuationTicks -= 1;

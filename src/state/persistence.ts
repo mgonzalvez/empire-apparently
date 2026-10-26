@@ -122,6 +122,9 @@ export function loadGame(storage: StorageLike = defaultStorage()): GameState | n
 
 /** Fill in fields added since the save was written (additive v1 evolution). */
 export function reviveSave(g: GameState): GameState {
+  // C21 fields on older saves (additive v1 evolution — tutorial-only values).
+  g.rivalsFrozen = g.rivalsFrozen ?? false;
+  g.scriptedSupernova = g.scriptedSupernova ?? null;
   const dialogue = g.dialogue ?? { advisor: 'mort', recentIds: [], shown: {} };
   return {
     ...g,

@@ -88,6 +88,9 @@ function rivalAttack(d: GameState, attacker: string, target: System, rng: Rng): 
 
 /** Rivals pipeline stage (core §4 year-step 5). Mutates the draft. */
 export function applyRivals(d: GameState, rng: Rng): void {
+  // C21 — tutorial scenario: the rivals hold their breath for the whole run.
+  // (Frozen rivals are also save-safe: the flag lives in GameState.)
+  if (d.rivalsFrozen) return;
   const systems = d.galaxy.systems;
   for (const r of d.galaxy.factions) {
     if (r.kind !== 'rival') continue;

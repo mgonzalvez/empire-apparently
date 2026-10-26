@@ -350,6 +350,22 @@ export interface GameState {
   /** Up to 3 autonomous support fleets (core §7; C13). */
   supports: Fleet[];
   rivals: RivalState[];
+  /**
+   * C21 — Tutorial scenario: rival actions are frozen for the whole scenario
+   * (save-safe plain field; the rivals stage checks it each tick).
+   */
+  rivalsFrozen: boolean;
+  /**
+   * C21 — Tutorial scenario: a scripted supernova. The star's instability is
+   * pinned to exact ticks (deterministic); transitions and detonation flow
+   * through the normal pipeline.
+   */
+  scriptedSupernova: {
+    systemId: string;
+    anomalousAt: number;
+    criticalAt: number;
+    armedAt: number;
+  } | null;
   /** Deterministic narrative-event state (C29). */
   narrative: { resolvedIds: string[]; cooldowns: Record<string, number> };
   /**

@@ -74,6 +74,8 @@ export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
     },
     supports: [],
     rivals: [],
+    rivalsFrozen: false,
+    scriptedSupernova: null,
     narrative: { resolvedIds: [], cooldowns: {} },
     events: [],
     lastDialogue: null,
