@@ -92,7 +92,7 @@ export function NewGameSetup({ onBack }: Props) {
                   disabled={!a.operational}
                   title={
                     a.operational
-                      ? `Select advisor: ${a.name} — ${a.description}`
+                      ? `Select advisor: ${a.name} — ${a.description} ${a.poolNote}`
                       : `${a.name} is not yet operational (conventional label: advisor unavailable)`
                   }
                   onClick={() => setAdvisor(a.id)}
@@ -102,6 +102,12 @@ export function NewGameSetup({ onBack }: Props) {
                 </button>
               ))}
             </div>
+            <p className="muted">
+              All three advisors are on duty from today: M.O.R.T. is fully
+              briefed; B.I.N.G.O. and the Handbook run on minimal duty and
+              expand later. Whichever speaks never changes how the galaxy
+              behaves.
+            </p>
           </section>
 
           <section className="setup-section">

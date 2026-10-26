@@ -124,6 +124,8 @@ export const CAMPAIGN = {
   victoryIntegration: 0.6,
   /** Event log cap (oldest entries trimmed first). */
   maxLogEntries: 400,
+  /** Semantic event record cap (C19; oldest trimmed first). */
+  maxEvents: 100,
 } as const;
 
 /**

@@ -33,6 +33,7 @@
 
 import { OCC } from '../data/balance';
 import { gridNeighbors } from './galaxy';
+import { emit } from './events';
 import type { Galaxy, GameState, Planet, System } from './types';
 
 /** True when a rival faction owns a grid-adjacent system (C10 threat). */
@@ -150,6 +151,7 @@ export function applyOccupation(d: GameState): void {
           kind: 'event',
           text: `${p.name} is fully integrated. The paperwork is, for once, complete.`,
         });
+        emit(d, 'planet.integrated', { planetName: p.name });
       }
     } else {
       p.stability = Math.max(0, p.stability - OCC.stabilityFallPerYear);
@@ -161,12 +163,17 @@ export function applyOccupation(d: GameState): void {
           kind: 'warning',
           text: `${p.name} rebels — the garrison was too thin. The world secedes${home ? ` to ${galaxy.factions.find((x) => x.id === home)?.name ?? 'its old government'}` : ' and is unclaimed'}.`,
         });
+        emit(d, 'occupation.rebellion', { planetName: p.name });
         s.ownerId = home;
         s.previousOwnerId = null;
         s.occupation = 'none';
         p.garrison = 0;
         p.stability = 100;
         p.integration = 0;
+      } else if (p.stability < OCC.autoTopUpBelowStability) {
+        // Imminent (C19): the world is one bad year from rebellion — the
+        // advisor warns while there is still time to act.
+        emit(d, 'occupation.unstable', { planetName: p.name });
       }
     }
   }

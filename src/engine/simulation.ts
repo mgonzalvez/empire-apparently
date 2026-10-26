@@ -22,6 +22,8 @@ import { applyRivals } from './rivals';
 import { applySupportFleets, assignMission, commission } from './support';
 import { applySupernovas, evacuate } from './supernova';
 import { evaluateWinLose } from './victory';
+import { applyNarration } from './dialogue';
+import { emit } from './events';
 import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
 import type { AdvisorId, GameState, ShipClass, Specialization, Stance, SupportMission } from './types';
 
@@ -73,8 +75,18 @@ export function newGame(seed: number, opts: NewGameOptions = {}): GameState {
     supports: [],
     rivals: [],
     narrative: { resolvedIds: [], cooldowns: {} },
+    events: [],
+    lastDialogue: null,
     tutorial: null,
-    dialogue: { advisor, recentIds: [], shown: {} },
+    dialogue: {
+      advisor,
+      recentIds: [],
+      shown: {},
+      lastShown: {},
+      lastNarratedSeq: 0,
+      // seq 0 is reserved for "nothing narrated"; events start at 1.
+      seq: 1,
+    },
     settings: {
       hints: 'normal',
       supernovaFreq: frequency,
@@ -152,6 +164,9 @@ export interface TickOptions {
   stages?: Partial<Record<StageName, StageFn>>;
   /** Observation hook: called with each stage name, in execution order. */
   trace?: (stage: StageName) => void;
+  /** Test hook: suppress the narration step (C19) — for sim/narration
+   *  separation tests. Default: narrate. */
+  narrate?: boolean;
 }
 
 /** Simulate exactly one galactic year (core §4). Pure: returns new state. */
@@ -164,7 +179,15 @@ export function runTick(state: GameState, opts: TickOptions = {}): GameState {
     opts.trace?.(name);
     (opts.stages?.[name] ?? stageFns[name])(d, rng, d.tick);
   }
-  d.rng = rng.state();
+  d.rng = rng.state(); // serialize the sim stream first — sim outcomes are final
+  // Narration (C19): AFTER all clock stages, so the tick's full event batch
+  // is visible. It draws ONLY from the narrRng stream (PLAN §7: independent
+  // streams) — the sim RNG is never consumed by narration.
+  if (opts.narrate ?? true) {
+    const narr = new Rng(d.narrRng);
+    applyNarration(d, narr);
+    d.narrRng = narr.state();
+  }
   if (d.log.length > CAMPAIGN.maxLogEntries) {
     d.log.splice(0, d.log.length - CAMPAIGN.maxLogEntries);
   }
@@ -201,7 +224,8 @@ export type SimAction =
       mission: SupportMission | null; // null = stand down (return home)
       targetId: string | null;
     } // instant, 0 ticks — the machine executes (C14)
-  | { type: 'EVACUATE'; systemId: string }; // instant, 0 ticks — then takes 2 years (C16)
+  | { type: 'EVACUATE'; systemId: string } // instant, 0 ticks — then takes 2 years (C16)
+  | { type: 'SET_ADVISOR'; advisor: AdvisorId }; // instant, 0 ticks, off-ledger — narration only (C19)
 
 /**
  * The ONLY actions that advance time (core §4: travel, waiting, repair,
@@ -233,23 +257,54 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
   }
   switch (action.type) {
     case 'BUILD':
-      return buildShip(state, action.ship);
+      return narrate(buildShip(state, action.ship));
     case 'REARM':
-      return rearm(state);
+      return narrate(rearm(state));
     case 'SPECIALIZE':
-      return specialize(state, action.systemId, action.specialization);
+      return narrate(specialize(state, action.systemId, action.specialization));
     case 'REINFORCE':
-      return reinforce(state, action.systemId);
+      return narrate(reinforce(state, action.systemId));
     case 'COMMISSION':
-      return commission(state);
+      return narrate(commission(state));
     case 'ASSIGN_MISSION':
-      return assignMission(state, action.fleetId, action.mission, action.targetId);
+      return narrate(assignMission(state, action.fleetId, action.mission, action.targetId));
     case 'EVACUATE':
-      return evacuate(state, action.systemId);
+      return narrate(evacuate(state, action.systemId));
+    case 'SET_ADVISOR':
+      return setAdvisor(state, action.advisor);
     default:
       // Unknown/unlisted actions never change anything (core §4).
       return state;
   }
+}
+
+/**
+ * Narration for instant (0-tick) actions (C19). Time-advancing actions
+ * narrate inside runTick (one narration per tick, covering that tick's
+ * whole event batch); instant actions don't run a tick, so they narrate
+ * here. `narrate` is a no-op for unchanged states — a refused action
+ * emits no events and advances no narration.
+ */
+function narrate(next: GameState): GameState {
+  const narr = new Rng(next.narrRng);
+  applyNarration(next, narr);
+  next.narrRng = narr.state();
+  return next;
+}
+
+/**
+ * SET_ADVISOR (C19, SPEC §3 "allow switching advisors from the main
+ * interface"): narration-only. The sim never reads which advisor speaks —
+ * the neutrality test pins an identical sim-state hash under different
+ * advisors. Unknown ids fall back to M.O.R.T.
+ */
+function setAdvisor(state: GameState, advisor: AdvisorId): GameState {
+  const a = ADVISOR_IDS.includes(advisor) ? advisor : 'mort';
+  if (a === state.dialogue.advisor) return state;
+  const d = structuredClone(state) as GameState;
+  d.dialogue.advisor = a;
+  d.settings.advisor = a;
+  return d;
 }
 
 /**
@@ -276,6 +331,10 @@ function beginTravel(state: GameState, destinationId: string): GameState {
     kind: 'info',
     text: `${d.flagship.name} sets course for ${dest.explored ? dest.name : 'the uncharted system'} (${quote.bandName}, ${quote.fuelCost} fuel).`,
   });
+  emit(d, 'travel.depart', {
+    planetName: dest.explored ? dest.name : 'the uncharted system',
+    years: quote.years ?? 1,
+  });
   return runYears(d, 1);
 }
 
@@ -293,6 +352,7 @@ function beginRepair(state: GameState): GameState {
     kind: 'economy',
     text: `Dockyards restore the ${d.flagship.name}'s hull to full.`,
   });
+  emit(d, 'fleet.repaired');
   return runYears(d, 1);
 }
 
@@ -314,6 +374,7 @@ function buildShip(state: GameState, ship: ShipClass): GameState {
     kind: 'economy',
     text: `Built a ${ship} at ${at.name} (combat strength ${combatStrength(d.flagship)}).`,
   });
+  emit(d, 'ship.built');
   return d;
 }
 

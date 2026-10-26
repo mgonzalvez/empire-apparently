@@ -16,6 +16,7 @@
 
 import { MAX_JUMP_RANGE, MOVE, type MoveBand } from '../data/balance';
 import { totalShips } from './fleets';
+import { emit } from './events';
 import type { Fleet, GameState, System } from './types';
 
 /** Straight-line map distance (map units, 1 decimal for display stability). */
@@ -196,6 +197,7 @@ export function resolveFleetMovement(d: GameState): void {
   f.travel = null;
   f.orders = { type: 'hold', targetId: null };
   d.log.push({ tick: d.tick, kind: 'info', text: `${f.name} arrives at ${dest.name}.` });
+  emit(d, 'travel.arrive', { planetName: dest.name });
   if (!dest.explored) {
     dest.explored = true;
     d.log.push({
@@ -205,6 +207,7 @@ export function resolveFleetMovement(d: GameState): void {
         ? `Reconnaissance: ${dest.planet.name}, a ${dest.planet.type} world (development ${dest.planet.development}, defense ${dest.defense}).`
         : 'Reconnaissance: an uninhabited star.',
     });
+    emit(d, 'recon.reveal', { planetName: dest.name });
   }
 }
 

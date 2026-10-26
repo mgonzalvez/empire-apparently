@@ -24,6 +24,7 @@ import { RIVAL, SUPPORT } from '../data/balance';
 import { defensiveStrength } from './combat';
 import { gridNeighbors } from './galaxy';
 import { Rng } from './random';
+import { emit } from './events';
 import type { GameState, System } from './types';
 
 const [VAR_LO, VAR_HI] = [0.9, 1.1]; // combat variance band (same as player battles)
@@ -66,6 +67,7 @@ function rivalAttack(d: GameState, attacker: string, target: System, rng: Rng): 
     kind: 'warning',
     text: `${r.name} takes ${target.name} — flotilla ${A} against defense ${D}.`,
   });
+  emit(d, 'rival.attack', { planetName: target.name, factionName: r.name });
 
   // C14: a support fleet defending this world breaks off the defense and
   // takes hull damage (it never invades, and it will limp home next year).
@@ -78,6 +80,7 @@ function rivalAttack(d: GameState, attacker: string, target: System, rng: Rng): 
         kind: 'warning',
         text: `${sf.name} breaks off the defense of ${target.name} (hull ${sf.hull}%).`,
       });
+      emit(d, 'support.report', { mission: 'defend', planetName: target.name });
     }
   }
   return r.fleet;
@@ -144,6 +147,7 @@ export function applyRivals(d: GameState, rng: Rng): void {
           kind: 'event',
           text: `${r.name} takes ${pick.name}.`,
         });
+        emit(d, 'rival.expansion', { planetName: pick.name, factionName: r.name });
         acted = true;
       }
     }

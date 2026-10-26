@@ -109,10 +109,16 @@ describe('time advancement (core §4)', () => {
     expect(next.rng).not.toEqual(g.rng);
   });
 
-  it('the narration RNG is untouched by C3 ticks (separate stream)', () => {
+  it('narration draws only from the narr stream — the sim stream is narration-free (C19)', () => {
     const g = newGame(SEED);
-    const next = dispatchSim(g, { type: 'WAIT' });
-    expect(next.narrRng).toEqual(g.narrRng);
+    const narrated = dispatchSim(g, { type: 'WAIT' });
+    const silent = runTick(g, { narrate: false });
+    // Sim state and sim RNG are byte-identical whether or not the narrator spoke.
+    expect(narrated.rng).toEqual(silent.rng);
+    expect(narrated.galaxy).toEqual(silent.galaxy);
+    expect(narrated.flagship).toEqual(silent.flagship);
+    // The narr stream IS consumed by narration — and deterministically so.
+    expect(narrated.narrRng).toEqual(runTick(g).narrRng);
   });
 });
 

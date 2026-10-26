@@ -88,6 +88,69 @@ export interface System {
 
 export type FactionKind = 'player' | 'rival' | 'independent';
 
+// ── Semantic events (C19) ───────────────────────────────────────────────
+
+/**
+ * The semantic event catalog (PLAN §10; data lives in `data/dialogue/events.ts`).
+ * The engine emits these as it acts — FACTS, not prose. The dialogue layer
+ * (`engine/dialogue.ts`) turns them into advisor lines; the factual log is
+ * a separate surface (P5). Pruned from the PLAN §10 draft: victory/defeat
+ * (the end screen presents them), event.resolved (arrives with C29),
+ * rival.defeated (the current rules never eliminate a rival).
+ */
+export type SimEventType =
+  | 'travel.depart'
+  | 'travel.arrive'
+  | 'recon.reveal'
+  | 'combat.victory'
+  | 'combat.defeat'
+  | 'combat.withdraw'
+  | 'invasion.success'
+  | 'invasion.failure'
+  | 'planet.captured'
+  | 'planet.integrated'
+  | 'occupation.unstable'
+  | 'occupation.rebellion'
+  | 'ship.built'
+  | 'fleet.repaired'
+  | 'support.report'
+  | 'supernova.anomalous'
+  | 'supernova.critical'
+  | 'supernova.detonation'
+  | 'evacuation.done'
+  | 'rival.expansion'
+  | 'rival.attack';
+
+/**
+ * A semantic event the sim emits (C19). `seq` is a monotonic sequence
+ * number (narration cursor); `payload` carries factual values for line
+ * interpolation ({planetName}, {factionName}, {shipsLost}, {troopsLost},
+ * {years}, {population}).
+ */
+export interface SimEvent {
+  seq: number;
+  tick: number;
+  type: SimEventType;
+  payload?: {
+    planetName?: string;
+    factionName?: string;
+    shipsLost?: number;
+    troopsLost?: number;
+    years?: number;
+    population?: number;
+    mission?: string;
+  };
+}
+
+/** The last advisor line (C19) — what the DialogueBar renders. */
+export interface DialoguePick {
+  tick: number;
+  event: SimEventType;
+  lineId: string;
+  advisor: AdvisorId;
+  text: string;
+}
+
 export interface Faction {
   id: string;
   name: string;
@@ -261,12 +324,26 @@ export interface GameState {
   rivals: RivalState[];
   /** Deterministic narrative-event state (C29). */
   narrative: { resolvedIds: string[]; cooldowns: Record<string, number> };
+  /**
+   * Semantic events the sim has emitted (C19; capped, newest last). Facts —
+   * the log is the prose record, this is the typed record the dialogue
+   * layer consumes.
+   */
+  events: SimEvent[];
+  /** The advisor's most recent line (C18→C19; narration, never sim). */
+  lastDialogue: DialoguePick | null;
   /** Present while the tutorial runs (C20–C23). */
   tutorial: { step: number; completedSteps: number[]; scenario: string } | null;
   dialogue: {
     advisor: AdvisorId;
     recentIds: string[];
     shown: Record<string, Record<string, number>>;
+    /** C19: lineId → tick it last showed (cooldowns). */
+    lastShown: Record<string, number>;
+    /** C19: seq of the last narrated event (narration cursor). */
+    lastNarratedSeq: number;
+    /** C19: next event seq to assign. */
+    seq: number;
   };
   settings: {
     hints: HintLevel;

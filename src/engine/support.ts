@@ -43,6 +43,7 @@ import {
 import { gridNeighbors } from './galaxy';
 import { quoteVoyage } from './movement';
 import { recommendedGarrison } from './occupation';
+import { emit } from './events';
 import type { Fleet, GameState, System, SupportFleetMission, SupportMission } from './types';
 
 export const SUPPORT_COST = {
@@ -311,6 +312,7 @@ function patrolIntercepts(d: GameState, f: Fleet, target: System): void {
       kind: 'event',
       text: `${f.name} intercepts ${r.name}'s forward elements off ${target.name} (−${SUPPORT.interceptLoss} ship${SUPPORT.interceptLoss === 1 ? '' : 's'}).`,
     });
+    emit(d, 'support.report', { mission: 'patrol', planetName: target.name, factionName: r.name });
   }
 }
 
@@ -378,7 +380,9 @@ export function applySupportFleets(d: GameState): void {
               kind: 'event',
               text: `${f.name} charts ${t.name}: ${t.starClass} star, defense ${t.defense}, ${t.ownerId === null ? 'unclaimed' : `${d.galaxy.factions.find((x) => x.id === t.ownerId)?.name ?? t.ownerId} territory`}${t.planet ? `, ${t.planet.development} development` : ', no planet'}.`,
             });
+            emit(d, 'recon.reveal', { planetName: t.name });
           }
+          emit(d, 'support.report', { mission: 'scout', planetName: t.name });
           standDown(d, f, 'recon complete.');
         } else {
           travelTo(d, f, t.id, 'scouting');
@@ -406,6 +410,7 @@ export function applySupportFleets(d: GameState): void {
               kind: 'event',
               text: `${f.name} delivers ${move} troops — the garrison of ${t.planet.name} stands at ${t.planet.garrison}.`,
             });
+            emit(d, 'support.report', { mission: 'reinforce', planetName: t.planet.name });
           } else {
             d.log.push({ tick: d.tick, kind: 'info', text: `${f.name} finds ${t.name}'s garrison already at strength.` });
           }

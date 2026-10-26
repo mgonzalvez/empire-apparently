@@ -667,6 +667,82 @@ li.log-advisor {
   letter-spacing: 0.02em;
 }
 
+/* In-game advisor switcher (C19): voice only, never a sim control. */
+.advisor-pick-bar {
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.advisor-pick-bar button {
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.22rem 0.6rem;
+  border: 0;
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.advisor-pick-bar button + button {
+  border-left: 1px solid var(--line);
+}
+
+.advisor-pick-bar button.active[data-x],
+.advisor-pick-bar button.active {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.advisor-pick-bar button.active {
+  background: color-mix(in srgb, var(--advisor-accent, var(--accent)) 16%, transparent);
+}
+
+/* Dialogue bar (C19): the advisor's layer, separate from factual reports. */
+.dialogue-bar {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.4rem 1.25rem;
+  background: var(--surface);
+  border-left: 3px solid var(--advisor-accent, var(--accent-2));
+  border-bottom: 1px solid var(--line);
+}
+
+.dialogue-bar[data-advisor='mort'] {
+  --advisor-accent: var(--advisor-color-mort);
+}
+
+.dialogue-bar[data-advisor='bingo'] {
+  --advisor-accent: var(--advisor-color-bingo);
+}
+
+.dialogue-bar[data-advisor='handbook'] {
+  --advisor-accent: var(--advisor-color-handbook);
+}
+
+.dialogue-who {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--advisor-accent, var(--accent-2));
+  white-space: nowrap;
+}
+
+.dialogue-year {
+  font-size: 0.72rem;
+  color: var(--ink-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dialogue-text {
+  font-style: italic;
+  font-size: 0.92rem;
+}
+
 /* End-screen empire score (C18) */
 .empire-score {
   margin: 0.9rem 0 0;

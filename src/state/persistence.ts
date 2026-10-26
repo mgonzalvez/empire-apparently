@@ -100,6 +100,9 @@ export function saveGame(
 /**
  * Load and validate the saved game. A corrupt or absent save yields null —
  * the title screen simply offers no resume (no crash, no fake button).
+ * `reviveSave` fills in fields added after a save was written (C19:
+ * events, dialogue.lastShown/lastNarratedSeq/seq, lastDialogue) so older
+ * saves resume cleanly without a version bump (migration hooks: C35).
  */
 export function loadGame(storage: StorageLike = defaultStorage()): GameState | null {
   let raw: string | null = null;
@@ -110,10 +113,31 @@ export function loadGame(storage: StorageLike = defaultStorage()): GameState | n
   }
   if (raw === null) return null;
   try {
-    return validateSave(JSON.parse(raw));
+    const state = validateSave(JSON.parse(raw));
+    return state ? reviveSave(state) : null;
   } catch {
     return null; // unparseable → treat as absent
   }
+}
+
+/** Fill in fields added since the save was written (additive v1 evolution). */
+export function reviveSave(g: GameState): GameState {
+  const dialogue = g.dialogue ?? { advisor: 'mort', recentIds: [], shown: {} };
+  return {
+    ...g,
+    events: g.events ?? [],
+    lastDialogue: g.lastDialogue ?? null,
+    dialogue: {
+      advisor: dialogue.advisor ?? 'mort',
+      recentIds: dialogue.recentIds ?? [],
+      shown: dialogue.shown ?? {},
+      lastShown: dialogue.lastShown ?? {},
+      lastNarratedSeq: dialogue.lastNarratedSeq ?? 0,
+      // Events start at seq 1 (0 = nothing narrated); old saves without the
+      // field get a clean start rather than a skipped first event.
+      seq: Math.max(1, dialogue.seq ?? 1),
+    },
+  };
 }
 
 export function clearSave(storage: StorageLike = defaultStorage()): void {

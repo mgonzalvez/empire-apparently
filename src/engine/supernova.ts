@@ -27,6 +27,7 @@
 import { GALAXY } from '../data/balance';
 import { totalShips } from './fleets';
 import { quoteVoyage } from './movement';
+import { emit } from './events';
 import type { GameState, System } from './types';
 
 export type SupernovaState =
@@ -148,6 +149,7 @@ function completeEvacuation(d: GameState, s: System): void {
     kind: 'event',
     text: `Evacuation of ${s.name} complete — ${saved}M people reach the capital, and the stationed forces withdraw.`,
   });
+  emit(d, 'evacuation.done', { planetName: s.name, population: saved });
 }
 
 /** Detonation: the planet is gone, local player military is gone, remnant remains. */
@@ -187,6 +189,10 @@ function detonate(d: GameState, s: System): void {
   for (const f of lostFleets) {
     d.log.push({ tick: d.tick, kind: 'warning', text: `${f.name} was destroyed in the blast.` });
   }
+  emit(d, 'supernova.detonation', {
+    planetName: s.name,
+    population,
+  });
 }
 
 /**
@@ -217,6 +223,7 @@ export function applySupernovas(d: GameState): void {
         kind: 'event',
         text: `Stellar anomalies detected at ${s.name}. Astronomers are "studying it" and refusing to elaborate.`,
       });
+      emit(d, 'supernova.anomalous', { planetName: s.name });
     } else if (cur === 'critical') {
       const [lo, hi] = criticalWindow(s, isLocallyScouted(d, s.id));
       d.log.push({
@@ -224,6 +231,7 @@ export function applySupernovas(d: GameState): void {
         kind: 'warning',
         text: `${s.name} is CRITICAL — the star should go within ${lo}–${hi} years. Evacuation can preserve part of what is there.`,
       });
+      emit(d, 'supernova.critical', { planetName: s.name });
     } else if (cur === 'supernova') {
       d.log.push({
         tick: d.tick,

@@ -32,6 +32,7 @@ import {
 } from './fleets';
 import { recommendedGarrison } from './occupation';
 import { defendingStrengthAt } from './support';
+import { emit } from './events';
 import type { BattleReport, FleetShips, GameState, ShipClass, Stance, System } from './types';
 
 export type { Stance };
@@ -198,17 +199,29 @@ export function resolveBattle(d: GameState, targetId: string, stance: Stance): B
     outcome = 'held';
     d.stats.battles += 1;
     d.stats.losses += 1;
+    emit(d, 'combat.defeat', {
+      planetName: target.name,
+      shipsLost: shipsLost.interceptor + shipsLost.cruiser + shipsLost.transport,
+      troopsLost: troopsLostOrbital,
+    });
   } else {
     // Orbit secured: the defender's orbital fleet is gone, but the ground
     // defenses keep a share (C12: captured worlds still cost something).
     target.defense = Math.max(0, Math.round(D * COMBAT.defensesSurviveFraction));
     d.stats.battles += 1;
+    emit(d, 'combat.victory', {
+      planetName: target.name,
+      shipsLost: shipsLost.interceptor + shipsLost.cruiser + shipsLost.transport,
+      troopsLost: troopsLostOrbital,
+    });
 
     const withdrew = mult.withdrawChance > 0 && rng.chance(mult.withdrawChance);
     if (withdrew) {
       outcome = 'withdrawn';
+      emit(d, 'combat.withdraw', { planetName: target.name });
     } else if (shipsAfter.transport === 0) {
       outcome = 'no-lift';
+      emit(d, 'invasion.failure', { planetName: target.name });
     } else {
       // ── Invasion phase ────────────────────────────────────────────
       const I = Math.max(invasionStrength(fleet), 1);
@@ -237,9 +250,22 @@ export function resolveBattle(d: GameState, targetId: string, stance: Stance): B
         fleet.troops = Math.max(0, troopsAfter - (garrison ?? 0));
         d.stats.wins += 1;
         d.stats.conquests += 1;
+        emit(d, 'invasion.success', {
+          planetName: target.name,
+          troopsLost: troopsLostInvasion,
+        });
+        emit(d, 'planet.captured', {
+          planetName: target.name,
+          shipsLost: shipsLost.interceptor + shipsLost.cruiser + shipsLost.transport,
+          troopsLost: troopsLostOrbital + troopsLostInvasion,
+        });
       } else {
         outcome = 'invasion-failed';
         d.stats.losses += 1;
+        emit(d, 'invasion.failure', {
+          planetName: target.name,
+          troopsLost: troopsLostInvasion,
+        });
       }
     }
   }

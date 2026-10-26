@@ -7,6 +7,9 @@
 import { useState } from 'react';
 import { currentTheme, setTheme, type Theme } from '../theme';
 import { isSoundOn, playSfx, setSoundOn } from '../audio/sfx';
+import { loadGame, saveGame } from '../state/persistence';
+import { ADVISORS } from '../data/advisors';
+import type { AdvisorId, GameState } from '../engine/types';
 
 interface Props {
   onBack: () => void;
@@ -15,6 +18,10 @@ interface Props {
 export function OptionsScreen({ onBack }: Props) {
   const [theme, setThemeState] = useState<Theme>(() => currentTheme());
   const [sound, setSoundState] = useState<boolean>(() => isSoundOn());
+  // A saved campaign's advisor is changed here (C19); with no campaign in
+  // progress there is nothing to change — the section is not shown (no
+  // fake controls, core §19).
+  const [savedGame, setSavedGame] = useState<GameState | null>(() => loadGame());
 
   const toggleTheme = () => {
     const next: Theme = theme === 'light' ? 'dark' : 'light';
@@ -27,6 +34,15 @@ export function OptionsScreen({ onBack }: Props) {
     setSoundOn(next);
     setSoundState(next);
     if (next) playSfx('ui'); // confirmation blip — the first sound you hear
+  };
+
+  const setSavedAdvisor = (advisor: AdvisorId) => {
+    if (!savedGame) return;
+    const d = structuredClone(savedGame) as GameState;
+    d.dialogue.advisor = advisor;
+    d.settings.advisor = advisor;
+    saveGame(d);
+    setSavedGame(d);
   };
 
   return (
@@ -67,6 +83,34 @@ export function OptionsScreen({ onBack }: Props) {
               default; applies to this device.
             </p>
           </section>
+
+          {savedGame !== null && (
+            <section className="setup-section">
+              <h2 className="setup-title">Advisor of record (saved campaign)</h2>
+              <div
+                className="advisor-pick"
+                role="group"
+                aria-label="Advisor for the saved campaign"
+              >
+                {ADVISORS.map((a) => (
+                  <button
+                    key={a.id}
+                    type="button"
+                    data-advisor-id={a.id}
+                    className={savedGame.settings.advisor === a.id ? 'active' : ''}
+                    title={`Advisor: ${a.name} — ${a.description}`}
+                    onClick={() => setSavedAdvisor(a.id)}
+                  >
+                    {a.name}
+                  </button>
+                ))}
+              </div>
+              <p className="muted">
+                Voice only — the saved campaign's galaxy behaves the same
+                either way.
+              </p>
+            </section>
+          )}
 
           <p className="muted">
             More settings will appear as the office expands (hint frequency) —

@@ -11,6 +11,8 @@ import type { GameState } from '../engine/types';
 import { totalShips } from '../engine/fleets';
 import { empireIncome } from '../engine/economy';
 import { alignmentProgress } from '../engine/victory';
+import { ADVISORS } from '../data/advisors';
+import { dispatch } from '../state/gameStore';
 
 export function EmpireBar({ game }: { game: GameState }) {
   const f = game.flagship;
@@ -41,6 +43,23 @@ export function EmpireBar({ game }: { game: GameState }) {
         {prog.owned < prog.total && (
           <span className="muted"> · {prog.owned}/{prog.total} under authority</span>
         )}
+      </div>
+      <div
+        className="advisor-pick-bar"
+        role="group"
+        aria-label="Advisor (voice only — the galaxy behaves the same either way)"
+      >
+        {ADVISORS.map((a) => (
+          <button
+            key={a.id}
+            type="button"
+            className={game.settings.advisor === a.id ? 'active' : ''}
+            title={`Advisor: ${a.name} — ${a.description} Voice only; switching never changes the simulation.`}
+            onClick={() => dispatch({ type: 'SET_ADVISOR', advisor: a.id })}
+          >
+            {a.shortName}
+          </button>
+        ))}
       </div>
       <div className="empire-fleet">
         {f.travel

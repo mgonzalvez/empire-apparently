@@ -12,7 +12,7 @@ import {
   newGame,
   type NewGameOptions,
 } from '../engine/simulation';
-import type { GameState, ShipClass, Specialization, Stance, SupportMission } from '../engine/types';
+import type { AdvisorId, GameState, ShipClass, Specialization, Stance, SupportMission } from '../engine/types';
 import { clearSave, saveGame } from './persistence';
 import { isSoundOn } from '../audio/sfx';
 
@@ -45,6 +45,7 @@ export type StoreAction =
       targetId: string | null;
     } // C14: assign a support-fleet mission (instant)
   | { type: 'EVACUATE'; systemId: string } // C16: order an evacuation (instant, then 2 years)
+  | { type: 'SET_ADVISOR'; advisor: AdvisorId } // C19: switch the advisor (instant, narration only)
   | { type: 'DISMISS_BATTLE' }
   | { type: 'LOAD'; state: GameState }; // C35: schema validation with import
 
@@ -117,11 +118,18 @@ function reduce(s: StoreState, action: StoreAction): StoreState {
     case 'EVACUATE':
       if (!s.game) return s;
       return { ...s, game: dispatchSim(s.game, action) };
+    case 'SET_ADVISOR':
+      if (!s.game) return s;
+      return { ...s, game: dispatchSim(s.game, action) };
     case 'DISMISS_BATTLE':
       if (!s.game?.lastBattle) return s;
       return { ...s, dismissedBattleTick: s.game.lastBattle.tick };
     case 'LOAD':
-      return { game: action.state, selectedSystemId: null, dismissedBattleTick: -1 };
+      return {
+        game: action.state,
+        selectedSystemId: null,
+        dismissedBattleTick: -1,
+      };
   }
 }
 
