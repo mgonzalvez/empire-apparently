@@ -20,7 +20,7 @@ import { canAttack, resolveBattle } from './combat';
 import { applyOccupation } from './occupation';
 import { applyRivals } from './rivals';
 import { applySupportFleets, assignMission, commission } from './support';
-import { applySupernovas } from './supernova';
+import { applySupernovas, evacuate } from './supernova';
 import { evaluateWinLose } from './victory';
 import { CAMPAIGN, FLEET, GALAXY } from '../data/balance';
 import type { GameState, ShipClass, Specialization, Stance, SupportMission } from './types';
@@ -188,7 +188,8 @@ export type SimAction =
       fleetId: string;
       mission: SupportMission | null; // null = stand down (return home)
       targetId: string | null;
-    }; // instant, 0 ticks — the machine executes (C14)
+    } // instant, 0 ticks — the machine executes (C14)
+  | { type: 'EVACUATE'; systemId: string }; // instant, 0 ticks — then takes 2 years (C16)
 
 /**
  * The ONLY actions that advance time (core §4: travel, waiting, repair,
@@ -231,6 +232,8 @@ export function dispatchSim(state: GameState, action: SimAction): GameState {
       return commission(state);
     case 'ASSIGN_MISSION':
       return assignMission(state, action.fleetId, action.mission, action.targetId);
+    case 'EVACUATE':
+      return evacuate(state, action.systemId);
     default:
       // Unknown/unlisted actions never change anything (core §4).
       return state;

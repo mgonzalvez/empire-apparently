@@ -255,6 +255,7 @@ export function generateGalaxy(seed: number, opts: GalaxyOptions = {}): Galaxy {
       instability: 0,
       supernovaCandidate: false,
       instabilityRate: 0,
+      evacuationTicks: 0,
     };
   });
 
@@ -455,6 +456,7 @@ export function createFixtureGalaxy(): Galaxy {
     instability: 0,
     supernovaCandidate: false,
     instabilityRate: 0,
+    evacuationTicks: 0,
     ...extra,
   });
 

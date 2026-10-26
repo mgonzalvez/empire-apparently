@@ -5,12 +5,12 @@
 
 import type { ReactNode } from 'react';
 import type { Fleet, GameState, Specialization, System } from '../engine/types';
-import { ECON, OCC, RIVAL } from '../data/balance';
+import { ECON, GALAXY, OCC, RIVAL } from '../data/balance';
 import { SPEC_LABEL, SPEC_NOTE, STAR_COLORS } from '../data/names';
 import { developmentCost, devRoman } from '../engine/economy';
 import { defensiveStrength } from '../engine/combat';
 import { gridNeighbors } from '../engine/galaxy';
-import { criticalWindow, isLocallyScouted, supernovaState } from '../engine/supernova';
+import { canEvacuate, criticalWindow, isLocallyScouted, supernovaState } from '../engine/supernova';
 import {
   integrationEstimate,
   isGarrisoned,
@@ -129,16 +129,43 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
             if (st === 'stable' || st === 'destroyed') return null;
             if (st === 'critical' || st === 'supernova') {
               const [lo, hi] = criticalWindow(system, isLocallyScouted(game, system.id));
+              const evacGate = canEvacuate(game, system.id);
               return (
-                <Row
-                  label="Stellar stability"
-                  value={
-                    st === 'supernova'
-                      ? 'SUPERNOVA — the star is about to go'
-                      : `CRITICAL — should go within ${lo}–${hi} years`
-                  }
-                  warn
-                />
+                <>
+                  <Row
+                    label="Stellar stability"
+                    value={
+                      st === 'supernova'
+                        ? 'SUPERNOVA — the star is about to go'
+                        : `CRITICAL — should go within ${lo}–${hi} years`
+                    }
+                    warn
+                  />
+                  {system.ownerId === 'player' && (
+                    system.evacuationTicks > 0 ? (
+                      <Row
+                        label="Evacuation"
+                        value={`In progress — ${system.evacuationTicks} year${system.evacuationTicks === 1 ? '' : 's'} left`}
+                        warn
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        className="yard-btn"
+                        disabled={!evacGate.ok || game.status !== 'active'}
+                        title={evacGate.ok ? undefined : evacGate.reason ?? undefined}
+                        onClick={() => dispatch({ type: 'EVACUATE', systemId: system.id })}
+                      >
+                        <span>
+                          Evacuate — {GALAXY.supernova.evacuation.credits}C, {GALAXY.supernova.evacuation.ticks} years
+                        </span>
+                        <span className="yard-after">
+                          preserves ~{Math.round(GALAXY.supernova.evacuation.populationSavedFraction * 100)}% of the people, withdraws stationed fleets
+                        </span>
+                      </button>
+                    )
+                  )}
+                </>
               );
             }
             return (

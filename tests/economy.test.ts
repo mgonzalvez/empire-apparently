@@ -47,6 +47,7 @@ const sys = (id: string, spec: Specialization, dev: number, ownerId: string | nu
   instability: 0,
   supernovaCandidate: false,
   instabilityRate: 0,
+  evacuationTicks: 0,
 });
 
 describe('production table (PLAN §8)', () => {

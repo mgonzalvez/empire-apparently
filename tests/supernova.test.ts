@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createFixtureGalaxy, generateGalaxy } from '../src/engine/galaxy';
-import { newGame, runYears } from '../src/engine/simulation';
+import { dispatchSim, newGame, runYears } from '../src/engine/simulation';
 import { criticalWindow, supernovaState } from '../src/engine/supernova';
 import { evaluateWinLose } from '../src/engine/victory';
 import type { GameState } from '../src/engine/types';
@@ -165,5 +165,84 @@ describe('C15 victory exclusion', () => {
     expect(mk(false)).toBe('active');
     // …but the same world, destroyed, is excluded → victory is achievable.
     expect(mk(true)).toBe('victory');
+  });
+});
+
+describe('C16 evacuation & detonation (Gate M4)', () => {
+  it('a warned supernova occurs in a live game without corrupting state', () => {
+    let s = fixtureState();
+    const s07 = () => s.galaxy.systems.find((x) => x.id === 'S07')!;
+    while (supernovaState(s07()) !== 'critical') s = runYears(s, 1);
+    const warned = s.log.some((l) => l.kind === 'warning' && l.text.includes('CRITICAL'));
+    while (!s07().destroyed) s = runYears(s, 1);
+    expect(warned).toBe(true);
+    expect(s07().planet).toBeNull(); // planet destroyed
+    expect(s07().ownerId).toBeNull(); // remnant belongs to no one
+    expect(s07().defense).toBe(0); // production permanently lost
+    expect(s.log.some((l) => l.text.includes('goes supernova'))).toBe(true); // factual report
+    for (const t of s.galaxy.systems) { // no corruption anywhere
+      expect(Number.isFinite(t.instability)).toBe(true);
+      expect(Number.isFinite(t.defense)).toBe(true);
+    }
+    expect(['active', 'victory', 'defeat']).toContain(s.status);
+  });
+
+  it('victory is still possible after a detonation', () => {
+    let s = fixtureState();
+    const s07 = () => s.galaxy.systems.find((x) => x.id === 'S07')!;
+    while (!s07().destroyed) s = runYears(s, 1); // let it blow
+    for (const t of s.galaxy.systems) {
+      if (t.destroyed || t.planet === null) continue;
+      t.ownerId = 'player';
+      t.occupation = 'integrated';
+      t.planet.integration = 100;
+      t.planet.stability = 100;
+    }
+    evaluateWinLose(s);
+    expect(s.status).toBe('victory');
+  });
+
+  it('save/load across the detonation is deep-equal', () => {
+    let s = fixtureState();
+    const s07 = () => s.galaxy.systems.find((x) => x.id === 'S07')!;
+    while (s07().instability < 100) s = runYears(s, 1); // armed, not yet detonated
+    expect(s07().destroyed).toBe(false);
+    const reloaded = JSON.parse(JSON.stringify(s)) as GameState; // the save round-trip
+    const a = runYears(reloaded, 3);
+    const b = runYears(s, 3);
+    expect(a).toEqual(b);
+  });
+
+  it('evacuation is strictly better than standing still', () => {
+    const mk = (orderEvacuation: boolean) => {
+      let s = fixtureState();
+      s.empire.credits = 300; // fund the emergency
+      // White-box: S01 is a player world whose star is about to go.
+      const s01 = s.galaxy.systems.find((x) => x.id === 'S01')!;
+      s01.ownerId = 'player';
+      s01.supernovaCandidate = true;
+      s01.instability = 95;
+      s01.instabilityRate = 5;
+      // Station a support fleet there.
+      s = dispatchSim(s, { type: 'COMMISSION' });
+      const f = s.supports[0];
+      f.systemId = 'S01';
+      f.supportState = 'defending';
+      f.mission = { type: 'defend', targetId: 'S01' };
+      if (orderEvacuation) s = dispatchSim(s, { type: 'EVACUATE', systemId: 'S01' });
+      s = runYears(s, 3); // armed → evacuation completes → detonation
+      return s;
+    };
+    const withEvac = mk(true);
+    const without = mk(false);
+    const s01a = withEvac.galaxy.systems.find((x) => x.id === 'S01')!;
+    expect(s01a.destroyed).toBe(true); // the star still goes
+    // Ships: withdrawn (alive) vs destroyed (gone).
+    expect(withEvac.supports).toHaveLength(1);
+    expect(without.supports).toHaveLength(0);
+    // People: 60% of S01's 6M reached the capital (round(3.6) = 4M).
+    const homeA = withEvac.galaxy.systems.find((x) => x.id === 'S04')!;
+    const homeB = without.galaxy.systems.find((x) => x.id === 'S04')!;
+    expect(homeA.planet!.population).toBe(homeB.planet!.population + 4);
   });
 });

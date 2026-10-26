@@ -82,6 +82,8 @@ export interface System {
   supernovaCandidate: boolean;
   /** Per-year instability increment (>0 only for candidates; C15). */
   instabilityRate: number;
+  /** Ticks of evacuation remaining (C16; 0 = none). */
+  evacuationTicks: number;
 }
 
 export type FactionKind = 'player' | 'rival' | 'independent';

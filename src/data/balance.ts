@@ -95,6 +95,12 @@ export const GALAXY = {
      * shown window's max is 6 — no false precision, core §10).
      */
     candidateRate: [3, 5] as const,
+    /** Evacuation (C16; core §10): time-costed, partial preservation, no minigame. */
+    evacuation: {
+      ticks: 2,
+      credits: 25,
+      populationSavedFraction: 0.6,
+    } as const,
     /** No candidates in the opening zone (fairness, core §3/§10). */
     minGridDistanceFromPlayer: 2,
     /** Stability thresholds (core §10 states, our numbers). */

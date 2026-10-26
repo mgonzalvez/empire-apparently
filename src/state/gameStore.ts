@@ -42,6 +42,7 @@ export type StoreAction =
       mission: SupportMission | null;
       targetId: string | null;
     } // C14: assign a support-fleet mission (instant)
+  | { type: 'EVACUATE'; systemId: string } // C16: order an evacuation (instant, then 2 years)
   | { type: 'DISMISS_BATTLE' }
   | { type: 'LOAD'; state: GameState }; // C35: schema validation with import
 
@@ -97,6 +98,7 @@ function reduce(s: StoreState, action: StoreAction): StoreState {
     case 'REINFORCE':
     case 'COMMISSION':
     case 'ASSIGN_MISSION':
+    case 'EVACUATE':
       if (!s.game) return s;
       return { ...s, game: dispatchSim(s.game, action) };
     case 'DISMISS_BATTLE':
