@@ -10,12 +10,14 @@ Static client-side browser game for GitHub Pages.
 
 ## Status
 
-**Phases A–B complete (C1–C8) — the conquest loop works.** In the browser you
-explore a seeded 20-system galaxy, travel, build, fight, conquer, and integrate
-worlds, and you can win the mandate (or lose it: wipe, no recovery, or year 120).
-A mostly-automatic "cruise" profile has won the 8-system test fixture headless
-(Tier-0 floor, PLAN P2). Next: C9 (specializations & development). Live status:
-`IMPLEMENTATION_STATUS.md`.
+**Phases A–F complete (C1–C18) — playable end to end, with a front door.**
+From the title screen you start a campaign (seed, advisor, supernova
+frequency), then explore a seeded 20-system galaxy, travel, build, fight,
+conquer, and integrate worlds, delegate to support fleets, and evacuate
+before supernovas — winning the mandate (or losing it: wipe, no recovery
+path, or the 150-year deadline). Progress autosaves; the title screen
+resumes it exactly. Next: C19 (dialogue variety engine + M.O.R.T. — the
+advisor finally speaks). Live status: `IMPLEMENTATION_STATUS.md`.
 
 ## Reading order
 
