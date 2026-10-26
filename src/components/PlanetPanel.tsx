@@ -113,7 +113,7 @@ export function PlanetPanel({ system, game, ownerName, fleet, footer }: PlanetPa
           {ownerFaction && ownerFaction.kind === 'rival' && ownerFaction.fleet > 0 && (
             <Row
               label="Rival flotilla"
-              value={`${ownerFaction.fleet} ships — attacks this world at 2× its defense`}
+              value={`${ownerFaction.fleet} ships — attacks this world at ${RIVAL.attackRatio}× its defense`}
             />
           )}
           {threatFaction && (

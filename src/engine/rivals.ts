@@ -148,8 +148,8 @@ export function applyRivals(d: GameState, rng: Rng): void {
       }
     }
 
-    // 4. BUILD — the flotilla grows (the idle rival).
-    if (!acted) {
+    // 4. BUILD — the flotilla grows (the idle rival), up to the cap.
+    if (!acted && r.fleet < RIVAL.fleetCap) {
       r.fleet += RIVAL.fleetBuildPerYear;
       d.log.push({
         tick: d.tick,

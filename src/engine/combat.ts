@@ -191,8 +191,9 @@ export function resolveBattle(d: GameState, targetId: string, stance: Stance): B
     d.stats.battles += 1;
     d.stats.losses += 1;
   } else {
-    // Orbit secured: the defender's orbital fleet is gone.
-    target.defense = 0;
+    // Orbit secured: the defender's orbital fleet is gone, but the ground
+    // defenses keep a share (C12: captured worlds still cost something).
+    target.defense = Math.max(0, Math.round(D * COMBAT.defensesSurviveFraction));
     d.stats.battles += 1;
 
     const withdrew = mult.withdrawChance > 0 && rng.chance(mult.withdrawChance);

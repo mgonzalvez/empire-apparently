@@ -70,7 +70,9 @@ export const GALAXY = {
 
   /** Initial defense = base + perDev*development (+ bonuses). */
   defenseBase: 2,
-  defensePerDevelopment: 2,
+  /** Tuned C12: 1 — auto-developed late-game worlds (dev 5) stay at 7 base
+   *  defense; at 2 they hit 12 and out-scale a 6-ship fleet. */
+  defensePerDevelopment: 1,
   bastionDefenseBonus: 4,
   binaryStarDefenseBonus: 2,
   uninhabitedDefense: 1,
@@ -102,8 +104,11 @@ export const CAMPAIGN = {
   startingResources: { credits: 100, materials: 100, fuel: 100 },
   /** "A modest flagship fleet" (core §3): enough to strike and invade once. */
   startingFleetShips: { interceptor: 2, cruiser: 0, transport: 1 },
-  /** Accepted defaults (PLAN §4): 120-year mandate, 60% integration victory. */
-  deadlineYears: 120,
+  /** Accepted defaults (PLAN §4). C12: 120 → 150 — the 100-seed sweep found
+   *  every loss was a deadline (zero wipeouts): the 20-system campaign
+   *  converges, it just needs the full ~50–75 minute session the p50 band
+   *  (90–150 ticks at 20–30 s/action) already assumes. */
+  deadlineYears: 150,
   victoryIntegration: 0.6,
   /** Event log cap (oldest entries trimmed first). */
   maxLogEntries: 400,
@@ -180,6 +185,10 @@ export const COMBAT = {
   developmentPerLevel: 1,
   /** Hull degrades by this × the ship-loss fraction (0.5 = half). */
   hullDamageFactor: 0.5,
+  /** When the orbit is won, this fraction of the world's static defenses
+   *  survives the change of regime (C12: conquered worlds are not free
+   *  targets — their defenses, and their garrison, stand next to each other). */
+  defensesSurviveFraction: 0.25,
 } as const;
 
 /** Occupation (C8, extended C10; core §9, PLAN §8). Initial values — tuned in C12/C34. */
@@ -204,17 +213,23 @@ export const RIVAL = {
   expandRatio: 1.5,
   /** Attack a player world when fleet ≥ ratio × its effective defense
    *  (orbital defense + garrison). At this ratio an attack always lands —
-   *  the threat is telegraphed, never a coin flip (core §11: no hidden cheating). */
-  attackRatio: 2.0,
+   *  the threat is telegraphed, never a coin flip (core §11: no hidden cheating).
+   *  Tuned C12: 2.5 paces the flotilla — it wins, loses ~30% of itself, and
+   *  must rebuild before it knocks again. */
+  attackRatio: 2.5,
   /** Otherwise reinforce the weakest owned system by this much per year. */
   reinforcePerYear: 1,
   /** Reinforce target = base + perDev × development. */
   defenseTargetBase: 4,
   defenseTargetPerDev: 2,
-  /** Fixed starting bonus (core §11): every rival starts with this fleet. */
-  startingFleet: 3,
+  /** Fixed starting bonus (core §11): every rival starts with this fleet.
+   *  Tuned C12: 2 — the first flotilla threat is a few years off. */
+  startingFleet: 2,
   /** The BUILD action: the rival fleet grows by this much per year. */
   fleetBuildPerYear: 1,
+  /** Tuned C12: flotillas stop growing here — no endless 30-ship monsters,
+   *  and the 2.5× gate keeps them away from garrisoned worlds. */
+  fleetCap: 12,
 } as const;
 
 /**

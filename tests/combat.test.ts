@@ -241,7 +241,7 @@ describe('invasion rules (acceptance: surviving transports + orbital superiority
     expect(report.troopsAfter).toBeLessThan(10);
     const t = state.galaxy.systems.find((s) => s.id === targetId)!;
     expect(t.ownerId).toBe('rival-0'); // not captured
-    expect(t.defense).toBe(0); // but the orbit was won
+    expect(t.defense).toBe(3); // orbit won: 11 × 0.25 survive the regime change
     expect(state.stats.losses).toBe(1);
   });
 

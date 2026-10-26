@@ -147,9 +147,10 @@ describe('occupation (C8)', () => {
 
   it('rival expansions do not trigger occupation (only player worlds settle)', () => {
     let s = fixtureState();
-    // S06 (rival-0, defense 6) takes S05 (ind-1, defense 4) on tick 1.
+    // S06 (rival-0, defense 5) takes S05 (ind-1, defense 3) on tick 1.
     sys2(s, 'S01').ownerId = 'player'; // shield S01 so S05 is the pick
     sys2(s, 'S07').ownerId = 'player'; // keep S03 from spending the action on S07
+    sys2(s, 'S06').defense = 5; // 5 ≥ 1.5×3: favorable odds
     const t = s.galaxy.systems.find((x) => x.id === 'S05')!;
     t.planet!.garrison = 4;
     s = runYears(s, 1);

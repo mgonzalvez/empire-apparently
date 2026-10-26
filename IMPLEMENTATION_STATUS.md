@@ -1,6 +1,6 @@
 # Implementation Status — Empire, Apparently
 
-Last updated: 2026-10-25 — **C11 complete.** Next chunk: **C12** (Balance pass + campaign simulator, Gate M2).
+Last updated: 2026-10-25 — **C12 complete (Gate M2).** Next chunk: **C13** (Support fleets: creation & state machine).
 
 Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 "Done" means the chunk's acceptance criteria passed and are committed.
@@ -10,7 +10,7 @@ Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 | Gate | Meets | Status |
 |---|---|---|
 | M1 — Playable conquest loop | Core §17.M1 | ✅ | C8: conquest loop end-to-end; Tier-0 cruise profile wins the 8-system fixture headless (tick 23, 6/6 battles, 0 fleets lost, 5/7 integrated ≥ 60%) |
-| M2 — Empire simulation | Core §17.M2 | ⬜ |
+| M2 — Empire simulation | Core §17.M2 | ✅ | C12: full 20-system campaign playable end-to-end without manual allocation; 100-seed sweep: zero dead ends, zero loops, cruise 82% / engaged 87% (≥ cruise), p50 win 109 ticks (90–150 band), rivals ≤ 60% in all engaged wins, decision-budget p95 ≤ 3 |
 | M3 — Automated support | Core §17.M3 | ⬜ |
 | M4 — Stellar catastrophes | Core §17.M4 | ⬜ |
 | M5 — Visual polish | Core §17.M5 | ⬜ |
@@ -40,7 +40,7 @@ Rules of this file: updated at the end of every chunk (quality gate, AGENTS.md).
 | C9 | Specializations & development | C | ✅ | `DEV` table in balance.ts (cap 5; transparent per-level costs 20/40/60/80c + 10/20/30/40m); `engine/economy.ts`: development stage (core §4 step 2) auto-advances player worlds one level/year, canonical order, after income, blocked when short (no negatives), capped at 5; `SPECIALIZE` action — free, instant (0 ticks, off-ledger, no RNG), player worlds only, changes next-year income per the table; PlanetPanel: one-click spec picker (production preview + implemented-only notes in tooltips) + transparent "auto development" cost row; map spec badges (i/m/e/f/b); **deferred to C11/C34** (not advertised in UI): industrial build discount + fortress defense bonus from the PLAN §8 "special" column; cruise profile re-verified: fixture win now at tick 42 (7/7 battles) — Tier-0 floor intact; 209 tests |
 | C10 | Occupation depth | C | ✅ | `OCC` gains `autoTopUpBelowStability` (40); recommended garrison = development + 1 while a rival is grid-adjacent, assigned at capture from surviving troops; `occupationStatus` → Stable/Unstable/Rebellion Imminent; Tier-0 fallback: below 40 stability, a docked flagship auto-tops the garrison (logged, zero input); instant `REINFORCE` action (Tier-2, only when it does something); `integrationEstimate` drives the "~N years" readout in PlanetPanel; rebellion secedes to previous owner/unclaimed; 219 tests |
 | C11 | Rivals v2 + rival fleets | C | ✅ | Rival `fleet` (abstract warships, fixed starting bonus 3 in `balance.ts`); one action/rival/year in priority order — ATTACK adjacent player world at ≥ 2.0× its defense (telegraphed, always lands, flotilla takes losses so attacks pace themselves) → EXPAND (≥ 1.5×) → REINFORCE (now logged) → BUILD (fleet +1, logged); garrison counts toward the defense a flotilla must clear (`defensiveStrength` in combat.ts — the player's readable counter; C7 player-battle contract untouched); PlanetPanel: flotilla row on rival systems + threat warning on player worlds the flotilla can take; acceptance: player still wins when rivals take neutral worlds first (tested); 225 tests |
-| C12 | Balance pass + campaign simulator | C | ⬜ | Gate M2 |
+| C12 | Balance pass + campaign simulator | C | ✅ | Gate M2. `tests/campaign-sim` gains the ENGAGED profile (same tempo floor + recapture priority, aggressive stance at the winnable gate — proven strictly dominant: ×1.25 attack, ×0.85 damage, never loses the orbit it wins) and the C12 100-seed sweep test (zero dead ends, zero loops, win rates, p50 band, rival share, decision budget). Balance tuning: `RIVAL` (start 3→2, attackRatio 2.0→2.5, new `fleetCap` 12 — 100-seed probe found unbounded flotillas taking garrisoned worlds), `COMBAT.defensesSurviveFraction 0.25` (captured worlds keep a quarter of static defense — no more free re-take targets), `GALAXY.defensePerDevelopment 2→1` (auto-developed dev-5 worlds no longer out-scale a 6-ship fleet), `CAMPAIGN.deadlineYears 120→150` (every one of the 100-seed losses was a deadline; 150 matches the 90–150-tick session band). Profile fixes: rearm no-op no longer blocks the build queue, repair-first below hull 40, 1.3× winnable-before-sailing gate (attrition was the tempo killer). Residual: 13/100 seeds still deadline at 150, all mid/late convergence (8 at ≥ 15/17 worlds) — C34 territory. 226 tests |
 | C13 | Support fleets: creation & state machine | D | ⬜ | |
 | C14 | Support missions | D | ⬜ | Gate M3 |
 | C15 | Supernova instability pipeline | E | ⬜ | |
