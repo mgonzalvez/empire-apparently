@@ -311,6 +311,28 @@ export interface BattleReport {
  * The only mutable game state (PLAN §7). Everything is JSON-serializable —
  * RNGs are stored as serializable state, never objects.
  */
+/**
+ * C20 — one tutorial step (data lives in `data/tutorial/steps.ts`, C22).
+ *
+ * Verify-only advance (CHUNKS C20): the machine advances a step SOLELY when
+ * `verify` — an authoritative, pure state check — returns true. There is no
+ * failure state: a wrong action sequence never fails a step, it just doesn't
+ * advance it, and a different valid action can never trap the player (the
+ * check is on state, never on the path taken). `recovery` is the recovery
+ * probe: guidance for when the expected action is currently impossible.
+ */
+export interface TutorialStep {
+  id: string;
+  /** Objective — a conventional label (SPEC §10); no jokes in the objective. */
+  objective: string;
+  /** Conventional label of the control to use (C22 highlights the real one). */
+  control: string | null;
+  /** Authoritative state check — pure. True = the step is done. */
+  verify: (s: GameState) => boolean;
+  /** Recovery probe: guidance when the expected action is impossible (null = nothing to say). */
+  recovery?: (s: GameState) => string | null;
+}
+
 export interface GameState {
   v: 1;
   seed: number;
@@ -339,7 +361,16 @@ export interface GameState {
   /** The advisor's most recent line (C18→C19; narration, never sim). */
   lastDialogue: DialoguePick | null;
   /** Present while the tutorial runs (C20–C23). */
-  tutorial: { step: number; completedSteps: number[]; scenario: string } | null;
+  tutorial: {
+    /** C21 scenario id (which deterministic region the tutorial plays on). */
+    scenario: string;
+    /** Index of the current step (=== steps.length when all complete). */
+    step: number;
+    /** Milestones in save: indices of completed steps (C23 preserves them). */
+    completedSteps: number[];
+    /** Skip pauses the tutorial; resume re-activates it at the same step. */
+    skipped: boolean;
+  } | null;
   dialogue: {
     advisor: AdvisorId;
     recentIds: string[];

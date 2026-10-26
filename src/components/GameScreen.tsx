@@ -16,6 +16,7 @@ import {
 import type { Fleet, GameState, Stance, System } from '../engine/types';
 import { EmpireBar } from './EmpireBar';
 import { DialogueBar } from './DialogueBar';
+import { TutorialOverlay } from './TutorialOverlay';
 import { EventLog } from './EventLog';
 import { FleetPanel } from './FleetPanel';
 import { GalaxyMap } from './GalaxyMap';
@@ -93,6 +94,7 @@ export function GameScreen() {
     <div className="game-root">
       <EmpireBar game={game} />
       <DialogueBar game={game} />
+      <TutorialOverlay />
       <div className="game-main">
         <div className="game-left">
           <div className="map-wrap">

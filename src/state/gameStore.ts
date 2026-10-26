@@ -12,6 +12,13 @@ import {
   newGame,
   type NewGameOptions,
 } from '../engine/simulation';
+import {
+  advanceTutorial,
+  resumeTutorial,
+  skipTutorial,
+  startTutorial,
+} from '../engine/tutorial';
+import { TUTORIAL_SCENARIO, TUTORIAL_STEPS } from '../data/tutorial/steps';
 import type { AdvisorId, GameState, ShipClass, Specialization, Stance, SupportMission } from '../engine/types';
 import { clearSave, saveGame } from './persistence';
 import { isSoundOn } from '../audio/sfx';
@@ -46,6 +53,10 @@ export type StoreAction =
     } // C14: assign a support-fleet mission (instant)
   | { type: 'EVACUATE'; systemId: string } // C16: order an evacuation (instant, then 2 years)
   | { type: 'SET_ADVISOR'; advisor: AdvisorId } // C19: switch the advisor (instant, narration only)
+  // C20: tutorial machine (the title-screen start button is C23 — no fake controls).
+  | { type: 'TUTORIAL_START' }
+  | { type: 'TUTORIAL_SKIP' }
+  | { type: 'TUTORIAL_RESUME' }
   | { type: 'DISMISS_BATTLE' }
   | { type: 'LOAD'; state: GameState }; // C35: schema validation with import
 
@@ -103,10 +114,10 @@ function reduce(s: StoreState, action: StoreAction): StoreState {
       return { ...s, selectedSystemId: action.systemId };
     case 'WAIT':
       if (!s.game) return s;
-      return { ...s, game: dispatchSim(s.game, action) };
+      return { ...s, game: advanceTutorial(dispatchSim(s.game, action), TUTORIAL_STEPS) };
     case 'TRAVEL':
       if (!s.game) return s;
-      return { ...s, game: dispatchSim(s.game, action) };
+      return { ...s, game: advanceTutorial(dispatchSim(s.game, action), TUTORIAL_STEPS) };
     case 'REPAIR':
     case 'ATTACK':
     case 'BUILD':
@@ -117,16 +128,27 @@ function reduce(s: StoreState, action: StoreAction): StoreState {
     case 'ASSIGN_MISSION':
     case 'EVACUATE':
       if (!s.game) return s;
-      return { ...s, game: dispatchSim(s.game, action) };
+      return { ...s, game: advanceTutorial(dispatchSim(s.game, action), TUTORIAL_STEPS) };
     case 'SET_ADVISOR':
       if (!s.game) return s;
-      return { ...s, game: dispatchSim(s.game, action) };
+      return { ...s, game: advanceTutorial(dispatchSim(s.game, action), TUTORIAL_STEPS) };
+    case 'TUTORIAL_START':
+      if (!s.game) return s;
+      return { ...s, game: startTutorial(s.game, TUTORIAL_SCENARIO) };
+    case 'TUTORIAL_SKIP':
+      if (!s.game) return s;
+      return { ...s, game: skipTutorial(s.game) };
+    case 'TUTORIAL_RESUME':
+      if (!s.game) return s;
+      return { ...s, game: resumeTutorial(s.game) };
     case 'DISMISS_BATTLE':
       if (!s.game?.lastBattle) return s;
       return { ...s, dismissedBattleTick: s.game.lastBattle.tick };
     case 'LOAD':
       return {
-        game: action.state,
+        // Self-healing: if a loaded save somehow satisfies its current step,
+        // advance on load rather than re-servicing it (milestones stay exact).
+        game: advanceTutorial(action.state, TUTORIAL_STEPS),
         selectedSystemId: null,
         dismissedBattleTick: -1,
       };

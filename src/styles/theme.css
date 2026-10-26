@@ -932,3 +932,49 @@ li.log-advisor {
   color: var(--ink);
   width: 12rem;
 }
+
+/* C20 — Tutorial overlay (shell; content arrives C22) */
+.tutorial-overlay {
+  margin: 0.25rem 0.75rem 0;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--advisor-accent, var(--accent-2));
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+.tutorial-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tutorial-stepno {
+  opacity: 0.7;
+  font-variant-numeric: tabular-nums;
+}
+.tutorial-btn {
+  font: inherit;
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.tutorial-btn:hover {
+  border-color: var(--advisor-accent, var(--accent-2));
+}
+.tutorial-objective {
+  margin: 0.25rem 0;
+}
+.tutorial-control {
+  margin: 0.25rem 0;
+  opacity: 0.8;
+}
+.tutorial-recovery {
+  margin: 0.25rem 0;
+  color: var(--warn);
+}
