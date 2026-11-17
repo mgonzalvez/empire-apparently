@@ -61,3 +61,17 @@ npm run dev      # Vite dev server (NOT file://)
 Planned (C36): GitHub Actions build + deploy to `mgonzalvez.github.io` subpath
 (default) or `empire.gonzhome.us` subdomain (alternative). `vite.config.ts`
 `base` must match whichever is chosen.
+
+## Registry & provenance rule (portfolio-wide)
+
+Personal project — completely separate from Apple work.
+
+- `.npmrc` pins `registry=https://registry.npmjs.org`. Unlike the other repos,
+  this one has real npm dependencies (React 19, Vite 8, TypeScript, Vitest), so
+  the pin is load-bearing: without it, an `npm install` on the work Mac writes
+  Apple-mirror (`npm.apple.com`, `artifacts.apple.com/artifactory/...`)
+  `resolved` URLs into `package-lock.json`, and GitHub Actions fails with
+  `ENOTFOUND`.
+- Audit before pushing: `../scripts/check-registry.sh` (add `--fix` to normalize).
+- No work credentials, internal hostnames, proprietary assets, or confidential
+  material in this repo.
